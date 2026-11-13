@@ -3,81 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบจัดเตรียมรายงานและแจ้งเตือนการส่ง | Report Preparation & Alert System</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>ระบบจัดเตรียมรายงานและแจ้งเตือนการส่ง (Report Preparation & Alert System)</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <!-- Google Fonts: Prompt & Sarabun -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600&display=swap" rel="stylesheet">
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
-
     <style>
         body {
             font-family: 'Prompt', 'Sarabun', sans-serif;
             background-color: #f8fafc;
+            color: #1e293b;
         }
-        .font-sarabun {
-            font-family: 'Sarabun', 'Prompt', sans-serif;
-        }
+        /* Custom Scrollbar */
         ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
+            width: 8px;
+            height: 8px;
         }
         ::-webkit-scrollbar-track {
             background: #f1f5f9;
         }
         ::-webkit-scrollbar-thumb {
             background: #cbd5e1;
-            border-radius: 3px;
+            border-radius: 4px;
         }
         ::-webkit-scrollbar-thumb:hover {
             background: #94a3b8;
         }
-        @keyframes urgentPulse {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.45); }
-            50% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
-        }
-        .animate-urgent {
-            animation: urgentPulse 2s infinite;
-        }
     </style>
 </head>
-<body class="text-slate-800 antialiased min-h-screen flex flex-col">
+<body class="min-h-screen flex flex-col antialiased selection:bg-blue-500 selection:text-white">
 
-    <!-- ========================================== -->
-    <!-- HEADER: Title, Clock, Countdown & Controls -->
-    <!-- ========================================== -->
-    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap items-center justify-between gap-3">
-            <!-- Brand Title -->
+    <!-- Top Navigation Header -->
+    <header class="bg-slate-900 text-white shadow-md sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <div class="flex items-center space-x-3">
-                <div class="bg-indigo-600 text-white p-2.5 rounded-2xl shadow-md shadow-indigo-200 shrink-0">
-                    <i data-lucide="bell-ring" class="w-6 h-6"></i>
+                <div class="bg-blue-600 p-2 rounded-xl text-white shadow-inner flex items-center justify-center">
+                    <i data-lucide="shield-alert" class="w-6 h-6"></i>
                 </div>
                 <div>
-                    <h1 class="font-bold text-base sm:text-xl text-slate-900 leading-tight">ระบบจัดเตรียมรายงานและแจ้งเตือนการส่ง</h1>
-                    <p class="text-xs text-slate-500 hidden sm:block">Report Preparation & Alert System • เตรียมข้อความและรูปภาพล่วงหน้า แชร์เข้า LINE ทันที</p>
+                    <h1 class="text-lg font-bold tracking-tight">ระบบเตรียมรายงาน & แจ้งเตือน</h1>
+                    <p class="text-xs text-slate-400 hidden sm:block">สภ.ลำปลายมาศ • จัดการข้อความ รูปภาพ และเวลาส่งอัตโนมัติ</p>
                 </div>
             </div>
 
-            <!-- Header Action Buttons -->
-            <div class="flex flex-wrap items-center gap-2">
-                <!-- Test Sound Button (Web Audio API) -->
-                <button type="button" id="testSoundBtn" class="px-3 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-medium transition flex items-center space-x-1.5" title="ทดสอบเสียงกระดิ่งแจ้งเตือน">
-                    <i data-lucide="volume-2" class="w-4 h-4 text-indigo-600"></i>
-                    <span>ทดสอบเสียงแจ้งเตือน</span>
+            <!-- Header Actions / Real-time Clock -->
+            <div class="flex items-center space-x-3">
+                <div class="hidden md:flex flex-col items-end bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700/50">
+                    <span id="current-time-display" class="text-sm font-semibold text-blue-400 font-mono">--:--:--</span>
+                    <span id="current-date-display" class="text-[10px] text-slate-300">กำลังโหลดวันเวลา...</span>
+                </div>
+
+                <button onclick="openTemplateManager()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white px-3 py-2 rounded-lg text-xs font-medium flex items-center space-x-1.5 transition-colors border border-slate-700" title="จัดการเทมเพลตข้อความ">
+                    <i data-lucide="file-text" class="w-4 h-4 text-amber-400"></i>
+                    <span class="hidden md:inline">จัดการเทมเพลต</span>
                 </button>
 
-                <!-- Browser Notification Permission Button -->
-                <button type="button" id="notifPermBtn" class="px-3 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-medium transition flex items-center space-x-1.5" title="ขอสิทธิ์แจ้งเตือนบนหน้าจอ">
-                    <i id="notifIcon" data-lucide="bell" class="w-4 h-4 text-amber-500"></i>
-                    <span id="notifBtnText" class="hidden md:inline">เปิดการแจ้งเตือนเบราว์เซอร์</span>
+                <button onclick="openSnippetManager()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white px-3 py-2 rounded-lg text-xs font-medium flex items-center space-x-1.5 transition-colors border border-slate-700" title="จัดการรายชื่อและสถานที่">
+                    <i data-lucide="users" class="w-4 h-4 text-emerald-400"></i>
+                    <span class="hidden md:inline">รายชื่อ & สถานที่</span>
                 </button>
 
-                <!-- Primary Create Button -->
-                <button type="button" id="createNewReportBtn" class="bg-indigo-600 hover:bg-indigo-700 active:scale-[0.98] text-white px-4 py-2.5 rounded-xl font-semibold text-xs sm:text-sm shadow-md shadow-indigo-200 transition flex items-center space-x-1.5 cursor-pointer">
+                <button onclick="testNotificationSound()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white p-2 rounded-lg text-xs font-medium flex items-center space-x-1 transition-colors border border-slate-700" title="ทดสอบเสียงกระดิ่ง">
+                    <i data-lucide="volume-2" class="w-4 h-4 text-blue-400"></i>
+                </button>
+
+                <button onclick="openReportModal()" class="bg-blue-600 hover:bg-blue-500 text-white px-3.5 py-2 rounded-lg text-xs font-semibold flex items-center space-x-1.5 shadow-sm transition-all hover:shadow">
                     <i data-lucide="plus" class="w-4 h-4"></i>
                     <span>สร้างรายงานใหม่</span>
                 </button>
@@ -85,218 +77,287 @@
         </div>
     </header>
 
-    <!-- ========================================== -->
-    <!-- MAIN DASHBOARD CONTENT                     -->
-    <!-- ========================================== -->
-    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+    <!-- Main Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
-        <!-- Top Status Section: Real-time Thai Clock & Next Countdown Card -->
-        <section class="grid grid-cols-1 lg:grid-cols-12 gap-4">
-            <!-- Real-Time Thai Clock -->
-            <div class="lg:col-span-5 bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950 text-white rounded-2xl p-5 shadow-lg flex flex-col justify-between relative overflow-hidden">
-                <div class="absolute -right-4 -bottom-4 opacity-10">
-                    <i data-lucide="clock" class="w-32 h-32"></i>
-                </div>
-                <div class="flex items-center justify-between gap-2">
-                    <span class="text-indigo-200 text-xs font-medium bg-white/10 px-3 py-1 rounded-full flex items-center space-x-1.5">
-                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-                        <span>เวลาปัจจุบัน (ประเทศไทย)</span>
-                    </span>
-                    <span id="currentDateDisplay" class="text-slate-200 text-xs sm:text-sm font-medium">กำลังโหลดวันที่...</span>
+        <!-- Countdown & Status Dashboard Banner -->
+        <section class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <!-- Next Upcoming Report Card -->
+            <div class="bg-gradient-to-br from-blue-900 to-slate-900 text-white p-5 rounded-2xl shadow-sm border border-blue-800/40 flex flex-col justify-between">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs uppercase tracking-wider font-semibold text-blue-300 bg-blue-950/60 px-2.5 py-1 rounded-full border border-blue-700/50">รายงานถัดไป</span>
+                    <span id="next-report-time-badge" class="text-xs font-mono bg-blue-600 text-white px-2 py-0.5 rounded font-bold">--:--</span>
                 </div>
                 <div class="my-3">
-                    <div id="realtimeClock" class="text-4xl sm:text-5xl font-bold tracking-wider font-mono text-white">00:00:00</div>
+                    <h3 id="next-report-title" class="text-lg font-bold text-white truncate">ไม่มีรายงานที่รอส่งในเร็วๆ นี้</h3>
+                    <p id="next-report-desc" class="text-xs text-slate-300 line-clamp-1 mt-0.5">สร้างรายงานใหม่เพื่อเริ่มระบบตั้งเวลาเตือน</p>
                 </div>
-                <div class="text-xs text-slate-400 flex items-center space-x-1.5">
-                    <i data-lucide="shield-check" class="w-4 h-4 text-emerald-400"></i>
-                    <span>ระบบตรวจสอบเวลาอัตโนมัติทุกวินาที (เปิดหน้าต่างนี้ค้างไว้เพื่อรับการแจ้งเตือน)</span>
+                <div class="flex items-center justify-between pt-2 border-t border-blue-800/30 text-xs">
+                    <span class="text-slate-300">เวลานับถอยหลัง:</span>
+                    <span id="countdown-timer" class="font-mono font-bold text-amber-400 text-sm">--:--:--</span>
                 </div>
             </div>
 
-            <!-- Next Upcoming Countdown Card -->
-            <div class="lg:col-span-7 bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex flex-col justify-between">
-                <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
-                    <span class="text-indigo-700 text-xs font-semibold bg-indigo-50 border border-indigo-100 px-3 py-1 rounded-full flex items-center space-x-1.5">
-                        <i data-lucide="hourglass" class="w-3.5 h-3.5"></i>
-                        <span>นับถอยหลังไปยังรายงานถัดไป</span>
+            <!-- Quick Stats Card 1 -->
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between">
+                <div class="flex items-center justify-between text-slate-500">
+                    <span class="text-xs font-medium uppercase tracking-wider">รายงานทั้งหมดในระบบ</span>
+                    <div class="p-2 bg-blue-50 text-blue-600 rounded-xl">
+                        <i data-lucide="layers" class="w-5 h-5"></i>
+                    </div>
+                </div>
+                <div class="my-2">
+                    <span id="stat-total-reports" class="text-3xl font-bold text-slate-900">0</span>
+                    <span class="text-xs text-slate-500 ml-1">รายการ</span>
+                </div>
+                <div class="text-xs text-slate-500 flex items-center justify-between">
+                    <span>เปิดใช้งานอยู่: <strong id="stat-active-reports" class="text-emerald-600">0</strong></span>
+                    <span>เสร็จสิ้นวันนี้: <strong id="stat-completed-reports" class="text-blue-600">0</strong></span>
+                </div>
+            </div>
+
+            <!-- Quick Data Backup & Import Card -->
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between">
+                <div class="flex items-center justify-between text-slate-500">
+                    <span class="text-xs font-medium uppercase tracking-wider">สำรอง / กู้คืนข้อมูล</span>
+                    <div class="p-2 bg-emerald-50 text-emerald-600 rounded-xl">
+                        <i data-lucide="database" class="w-5 h-5"></i>
+                    </div>
+                </div>
+                <div class="text-xs text-slate-600 my-1">
+                    ข้อมูลรายงาน รูปภาพ เทมเพลต และรายชื่อทั้งหมดจะถูกเก็บในเบราว์เซอร์ สามารถสำรองเก็บไว้ไฟล์ JSON ได้
+                </div>
+                <div class="flex items-center space-x-2 pt-2 border-t border-slate-100">
+                    <button onclick="exportDataJSON()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 py-1.5 px-3 rounded-lg text-xs font-medium flex items-center justify-center space-x-1 transition-colors">
+                        <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                        <span>Export JSON</span>
+                    </button>
+                    <label class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 py-1.5 px-3 rounded-lg text-xs font-medium flex items-center justify-center space-x-1 transition-colors cursor-pointer">
+                        <i data-lucide="upload" class="w-3.5 h-3.5"></i>
+                        <span>Import JSON</span>
+                        <input type="file" id="import-json-file" accept=".json" class="hidden" onchange="importDataJSON(event)">
+                    </label>
+                </div>
+            </div>
+        </section>
+
+        <!-- Filters & View Controls -->
+        <section class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <!-- Filter Tabs -->
+            <div class="flex items-center space-x-1 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
+                <button onclick="setFilterStatus('all')" id="filter-btn-all" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white transition-all whitespace-nowrap shadow-sm">ทั้งหมด</button>
+                <button onclick="setFilterStatus('active')" id="filter-btn-active" class="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 transition-all whitespace-nowrap">เปิดใช้งาน</button>
+                <button onclick="setFilterStatus('due')" id="filter-btn-due" class="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 transition-all whitespace-nowrap">ถึงเวลาส่งแล้ว</button>
+                <button onclick="setFilterStatus('inactive')" id="filter-btn-inactive" class="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 transition-all whitespace-nowrap">ปิดใช้งาน</button>
+            </div>
+
+            <!-- Search & View Mode Switcher -->
+            <div class="flex items-center space-x-3 w-full sm:w-auto justify-between sm:justify-end">
+                <div class="relative w-full sm:w-64">
+                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                        <i data-lucide="search" class="w-4 h-4"></i>
                     </span>
-
-                    <!-- Backup & Restore JSON Controls -->
-                    <div class="flex items-center space-x-2">
-                        <button type="button" id="exportJsonBtn" class="text-xs text-slate-600 hover:text-indigo-600 bg-slate-100 hover:bg-indigo-50 px-2.5 py-1.5 rounded-lg font-medium transition flex items-center space-x-1" title="ส่งออกไฟล์สำรองข้อมูล JSON">
-                            <i data-lucide="download" class="w-3.5 h-3.5"></i>
-                            <span>Export JSON</span>
-                        </button>
-                        <button type="button" id="importJsonBtn" class="text-xs text-slate-600 hover:text-emerald-600 bg-slate-100 hover:bg-emerald-50 px-2.5 py-1.5 rounded-lg font-medium transition flex items-center space-x-1" title="นำเข้าข้อมูลจากไฟล์ JSON">
-                            <i data-lucide="upload" class="w-3.5 h-3.5"></i>
-                            <span>Import JSON</span>
-                        </button>
-                        <input type="file" id="importJsonInput" accept=".json,application/json" class="hidden">
-                    </div>
+                    <input type="text" id="search-input" oninput="handleSearch(this.value)" placeholder="ค้นหาชื่อรายงาน หรือเนื้อหา..." class="w-full pl-9 pr-4 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all">
                 </div>
 
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 my-auto pt-1">
-                    <div class="min-w-0">
-                        <h2 id="nextReportTitle" class="text-lg sm:text-xl font-bold text-slate-800 truncate">ไม่มีรายการรอส่ง</h2>
-                        <p id="nextReportTime" class="text-sm text-slate-500 mt-0.5">กดปุ่ม "+ สร้างรายงานใหม่" เพื่อตั้งเวลาแจ้งเตือน</p>
-                    </div>
-                    <div id="countdownBox" class="bg-indigo-50/80 border border-indigo-100 rounded-2xl px-5 py-3 text-center min-w-[155px] shrink-0">
-                        <div class="text-xs text-indigo-600 font-medium mb-0.5">เหลือเวลาอีก</div>
-                        <div id="countdownTimer" class="text-2xl sm:text-3xl font-bold font-mono text-indigo-700">--:--:--</div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Filter Tabs & View Mode Bar -->
-        <section class="bg-white border border-slate-200 rounded-2xl p-3 sm:p-4 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3">
-            <!-- Status Filter Tabs -->
-            <div id="filterTabsGroup" class="flex items-center space-x-1.5 overflow-x-auto pb-1 md:pb-0">
-                <button type="button" data-filter="all" class="filter-tab px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium bg-indigo-600 text-white shadow-sm transition whitespace-nowrap">
-                    ทั้งหมด (<span id="count-all">0</span>)
-                </button>
-                <button type="button" data-filter="pending" class="filter-tab px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium bg-slate-100 text-slate-600 hover:bg-slate-200/70 transition whitespace-nowrap">
-                    รอส่ง (<span id="count-pending">0</span>)
-                </button>
-                <button type="button" data-filter="due" class="filter-tab px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium bg-slate-100 text-slate-600 hover:bg-slate-200/70 transition whitespace-nowrap">
-                    ถึงเวลาส่งแล้ว (<span id="count-due">0</span>)
-                </button>
-                <button type="button" data-filter="sent" class="filter-tab px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium bg-slate-100 text-slate-600 hover:bg-slate-200/70 transition whitespace-nowrap">
-                    ส่งแล้ว (<span id="count-sent">0</span>)
-                </button>
-            </div>
-
-            <!-- View Mode Toggle (Row View Default vs Grid View) -->
-            <div class="flex items-center justify-between md:justify-end space-x-3">
-                <span class="text-xs text-slate-400 hidden sm:inline">เรียงตามเวลาแจ้งเตือน</span>
-                <div class="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200/60">
-                    <button type="button" id="viewRowBtn" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white text-indigo-600 shadow-sm transition flex items-center space-x-1.5">
-                        <i data-lucide="list" class="w-3.5 h-3.5"></i>
-                        <span>แบบแถว</span>
+                <!-- View Mode Buttons -->
+                <div class="flex items-center bg-slate-100 p-1 rounded-lg border border-slate-200">
+                    <button onclick="setViewMode('row')" id="view-mode-row" class="p-1.5 rounded-md text-slate-700 bg-white shadow-sm transition-all" title="มุมมองแถวแนวนอน">
+                        <i data-lucide="list" class="w-4 h-4"></i>
                     </button>
-                    <button type="button" id="viewGridBtn" class="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 transition flex items-center space-x-1.5">
-                        <i data-lucide="layout-grid" class="w-3.5 h-3.5"></i>
-                        <span>แบบการ์ด</span>
+                    <button onclick="setViewMode('grid')" id="view-mode-grid" class="p-1.5 rounded-md text-slate-500 hover:text-slate-800 transition-all" title="มุมมองการ์ด">
+                        <i data-lucide="layout-grid" class="w-4 h-4"></i>
                     </button>
                 </div>
             </div>
         </section>
 
-        <!-- Reports Container (Row View / Grid View) -->
-        <section id="reportsContainer" class="space-y-3">
-            <!-- Dynamic report items injected here -->
+        <!-- Reports Container (Row View or Grid View) -->
+        <section id="reports-container" class="space-y-3">
+            <!-- Rendered dynamically via JavaScript -->
         </section>
 
         <!-- Empty State -->
-        <section id="emptyState" class="hidden bg-white border-2 border-dashed border-slate-200 rounded-2xl p-12 text-center">
-            <div class="w-16 h-16 bg-indigo-50 text-indigo-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <i data-lucide="folder-open" class="w-8 h-8"></i>
+        <div id="empty-state" class="hidden bg-white rounded-2xl border border-dashed border-slate-300 p-12 text-center space-y-3">
+            <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto">
+                <i data-lucide="file-question" class="w-6 h-6"></i>
             </div>
-            <h3 class="text-lg font-bold text-slate-800">ไม่มีรายการรายงานในหมวดนี้</h3>
-            <p class="text-sm text-slate-500 mt-1 mb-5">เริ่มต้นเตรียมข้อความและรูปภาพล่วงหน้า เพื่อให้ระบบแจ้งเตือนและส่งเข้า LINE ได้ทันทีเมื่อถึงเวลา</p>
-            <button type="button" id="emptyCreateBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold shadow-sm transition inline-flex items-center space-x-2">
+            <h3 class="text-base font-semibold text-slate-800">ยังไม่มีรายการรายงานในระบบ</h3>
+            <p class="text-xs text-slate-500 max-w-sm mx-auto">เริ่มต้นสร้างรายงานแรกของคุณเพื่อตั้งเวลาเตือน เตรียมข้อความและรูปภาพสำหรับส่งต่อได้อย่างสะดวก</p>
+            <button onclick="openReportModal()" class="mt-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl text-xs font-semibold inline-flex items-center space-x-1.5 shadow-sm transition-all">
                 <i data-lucide="plus" class="w-4 h-4"></i>
                 <span>สร้างรายงานใหม่</span>
             </button>
-        </section>
+        </div>
 
     </main>
 
-    <!-- ========================================== -->
-    <!-- MODAL 1: Create / Edit Report Modal        -->
-    <!-- ========================================== -->
-    <div id="formModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40 hidden flex items-center justify-center p-4 overflow-y-auto">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[92vh] flex flex-col overflow-hidden border border-slate-200">
+    <!-- Footer -->
+    <footer class="mt-auto py-6 text-center text-xs text-slate-600 border-t border-slate-200 bg-white">
+        <p>ระบบจัดเตรียมรายงานและแจ้งเตือนการส่ง (Report & Alert System) • สภ.ลำปลายมาศ</p>
+    </footer>
+
+    <!-- ================= MODALS ================= -->
+
+    <!-- 1. Report Form Modal (Create / Edit) -->
+    <div id="report-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs hidden p-4 overflow-y-auto">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] flex flex-col border border-slate-200 overflow-hidden my-auto">
             <!-- Modal Header -->
-            <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
-                <div class="flex items-center space-x-2.5">
-                    <div class="w-9 h-9 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center">
-                        <i data-lucide="file-edit" class="w-5 h-5"></i>
-                    </div>
-                    <h3 id="formModalTitle" class="font-bold text-lg text-slate-800">สร้างรายงานใหม่</h3>
+            <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <i data-lucide="file-edit" class="w-5 h-5 text-blue-400"></i>
+                    <h3 id="report-modal-title" class="text-base font-bold">สร้างรายงานใหม่</h3>
                 </div>
-                <button type="button" id="closeFormModalTopBtn" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-xl hover:bg-slate-200/60 transition">
+                <button onclick="closeReportModal()" class="text-slate-400 hover:text-white p-1 rounded-lg transition-colors">
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
             </div>
 
-            <!-- Modal Form Body -->
-            <form id="reportForm" class="p-6 overflow-y-auto space-y-5 flex-grow">
-                <input type="hidden" id="reportId">
+            <!-- Modal Body -->
+            <div class="p-6 overflow-y-auto space-y-5 flex-1">
+                <input type="hidden" id="report-id">
 
-                <!-- Title & Alert Time -->
-                <div class="grid grid-cols-1 sm:grid-cols-12 gap-4">
-                    <div class="sm:col-span-7">
-                        <label for="reportTitle" class="block text-sm font-semibold text-slate-700 mb-1.5">หัวข้อรายงาน <span class="text-red-500">*</span></label>
-                        <input type="text" id="reportTitle" placeholder="เช่น รายงานปล่อยแถวประจำวัน" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm transition">
-                    </div>
-                    <div class="sm:col-span-5">
-                        <label for="reportTime" class="block text-sm font-semibold text-slate-700 mb-1.5">เวลาแจ้งเตือน <span class="text-red-500">*</span></label>
-                        <input type="time" id="reportTime" value="20:00" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm font-mono font-semibold transition">
-                    </div>
-                </div>
-
-                <!-- Repeat Daily Option -->
-                <div class="flex items-center justify-between bg-slate-50 p-3.5 rounded-xl border border-slate-200">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-8 h-8 rounded-lg bg-indigo-100/70 text-indigo-600 flex items-center justify-center shrink-0">
-                            <i data-lucide="repeat" class="w-4 h-4"></i>
-                        </div>
-                        <div>
-                            <div class="text-sm font-semibold text-slate-800">แจ้งเตือนซ้ำทุกวัน</div>
-                            <div class="text-xs text-slate-500">รีเซ็ตสถานะเป็น "รอส่ง" อัตโนมัติในวันถัดไป</div>
-                        </div>
-                    </div>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" id="reportRepeat" class="sr-only peer" checked>
-                        <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
-                    </label>
-                </div>
-
-                <!-- Message Editor with Quick Insert Buttons -->
+                <!-- Title -->
                 <div>
-                    <div class="flex flex-wrap items-center justify-between gap-2 mb-1.5">
-                        <label for="reportMessage" class="block text-sm font-semibold text-slate-700">ข้อความรายงานที่เตรียมไว้ <span class="text-red-500">*</span></label>
-                        <div class="flex flex-wrap gap-1.5">
-                            <button type="button" id="insertDateBtn" class="text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 px-2.5 py-1 rounded-lg font-medium transition flex items-center space-x-1">
-                                <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
-                                <span>แทรก {DATE}</span>
-                            </button>
-                            <button type="button" id="applyTemplateBtn" class="text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 px-2.5 py-1 rounded-lg font-medium transition flex items-center space-x-1">
-                                <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
-                                <span>+ เทมเพลตปล่อยแถว</span>
-                            </button>
-                        </div>
-                    </div>
-                    <textarea id="reportMessage" rows="5" placeholder="พิมพ์ข้อความรายงานที่ต้องการเตรียมไว้ล่วงหน้า... ระบบจะแปลง {DATE} เป็นวันที่ไทยปัจจุบันให้อัตโนมัติ" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm font-sarabun leading-relaxed transition"></textarea>
-                    <p class="text-xs text-slate-500 mt-1">ตัวแปร <code class="bg-slate-100 px-1.5 py-0.5 rounded text-indigo-600 font-mono">{DATE}</code> จะถูกแปลงเป็นวันที่ภาษาไทยปัจจุบัน (เช่น <span id="sampleThaiDatePreview" class="font-medium text-slate-700"></span>) ตอนแสดงผลและแชร์</p>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">หัวข้อรายงาน / กิจกรรม <span class="text-red-500">*</span></label>
+                    <input type="text" id="report-title" placeholder="เช่น รายงานปล่อยแถวเคารพธงชาติ, สรุปยอดประจำวัน" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all">
                 </div>
 
-                <!-- Image Upload & Compression Section -->
+                <!-- Time & Active Toggle -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">เวลาที่ต้องส่ง (แจ้งเตือน) <span class="text-red-500">*</span></label>
+                        <input type="time" id="report-time" class="w-full px-3 py-2 text-xs font-mono bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all">
+                    </div>
+                    <div class="flex items-center pt-5">
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="report-active" class="sr-only peer" checked>
+                            <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                            <span class="ml-3 text-xs font-semibold text-slate-700">เปิดใช้งานระบบแจ้งเตือนอัตโนมัติ</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Date Range (ห้วงวันที่) -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">ห้วงวันที่เริ่มต้น (ถ้ามี)</label>
+                        <input type="date" id="report-start-date" class="w-full px-3 py-2 text-xs bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">ห้วงวันที่สิ้นสุด (ถ้ามี)</label>
+                        <input type="date" id="report-end-date" class="w-full px-3 py-2 text-xs bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+
+                <!-- Days of Week (วันที่ปฏิบัติ) -->
                 <div>
-                    <label class="block text-sm font-semibold text-slate-700 mb-1.5">รูปภาพประกอบรายงาน (อัปโหลดได้หลายรูป)</label>
-                    <div class="border-2 border-dashed border-slate-300 hover:border-indigo-400 rounded-2xl p-5 text-center transition bg-slate-50/70 relative cursor-pointer">
-                        <input type="file" id="imageInput" accept="image/*" multiple class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
-                        <div class="space-y-1.5 pointer-events-none">
-                            <div class="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center mx-auto">
-                                <i data-lucide="image-plus" class="w-5 h-5"></i>
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label class="block text-xs font-semibold text-slate-700">วันที่ปฏิบัติ (เลือกได้หลายวัน)</label>
+                        <div class="space-x-2">
+                            <button type="button" onclick="selectAllDays(true)" class="text-[11px] text-blue-600 hover:underline">เลือกทุกวัน</button>
+                            <span class="text-slate-300">|</span>
+                            <button type="button" onclick="selectWeekdayDays()" class="text-[11px] text-blue-600 hover:underline">จันทร์-ศุกร์</button>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        <label class="flex items-center space-x-2 p-2 rounded-lg bg-slate-50 border border-slate-200 text-xs cursor-pointer hover:bg-slate-100">
+                            <input type="checkbox" name="report-days" value="1" class="rounded text-blue-600 focus:ring-blue-500">
+                            <span>ทุกวันจันทร์</span>
+                        </label>
+                        <label class="flex items-center space-x-2 p-2 rounded-lg bg-slate-50 border border-slate-200 text-xs cursor-pointer hover:bg-slate-100">
+                            <input type="checkbox" name="report-days" value="2" class="rounded text-blue-600 focus:ring-blue-500">
+                            <span>ทุกวันอังคาร</span>
+                        </label>
+                        <label class="flex items-center space-x-2 p-2 rounded-lg bg-slate-50 border border-slate-200 text-xs cursor-pointer hover:bg-slate-100">
+                            <input type="checkbox" name="report-days" value="3" class="rounded text-blue-600 focus:ring-blue-500">
+                            <span>ทุกวันพุธ</span>
+                        </label>
+                        <label class="flex items-center space-x-2 p-2 rounded-lg bg-slate-50 border border-slate-200 text-xs cursor-pointer hover:bg-slate-100">
+                            <input type="checkbox" name="report-days" value="4" class="rounded text-blue-600 focus:ring-blue-500">
+                            <span>ทุกวันพฤหัสบดี</span>
+                        </label>
+                        <label class="flex items-center space-x-2 p-2 rounded-lg bg-slate-50 border border-slate-200 text-xs cursor-pointer hover:bg-slate-100">
+                            <input type="checkbox" name="report-days" value="5" class="rounded text-blue-600 focus:ring-blue-500">
+                            <span>ทุกวันศุกร์</span>
+                        </label>
+                        <label class="flex items-center space-x-2 p-2 rounded-lg bg-slate-50 border border-slate-200 text-xs cursor-pointer hover:bg-slate-100">
+                            <input type="checkbox" name="report-days" value="6" class="rounded text-blue-600 focus:ring-blue-500">
+                            <span>ทุกวันเสาร์</span>
+                        </label>
+                        <label class="flex items-center space-x-2 p-2 rounded-lg bg-slate-50 border border-slate-200 text-xs cursor-pointer hover:bg-slate-100">
+                            <input type="checkbox" name="report-days" value="0" class="rounded text-blue-600 focus:ring-blue-500">
+                            <span>ทุกวันอาทิตย์</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Report Content & Variables Assistant -->
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between">
+                        <label class="block text-xs font-semibold text-slate-700">ข้อความรายงาน <span class="text-red-500">*</span></label>
+                        <span class="text-[11px] text-slate-600">คลิกปุ่มด้านล่างเพื่อแทรกตัวแปรหรือรายชื่อ</span>
+                    </div>
+
+                    <!-- Quick Variables Bar -->
+                    <div class="flex flex-wrap gap-1.5 p-2 bg-slate-100 rounded-xl border border-slate-200">
+                        <button type="button" onclick="insertVariable('{DATE}')" class="px-2 py-1 bg-white hover:bg-blue-50 text-blue-700 border border-slate-200 rounded-lg text-[11px] font-medium shadow-2xs transition-all">+ วันที่ปัจจุบัน</button>
+                        <button type="button" onclick="insertVariable('{DAY}')" class="px-2 py-1 bg-white hover:bg-blue-50 text-blue-700 border border-slate-200 rounded-lg text-[11px] font-medium shadow-2xs transition-all">+ วันในสัปดาห์</button>
+                        <button type="button" onclick="insertVariable('{TIME}')" class="px-2 py-1 bg-white hover:bg-blue-50 text-blue-700 border border-slate-200 rounded-lg text-[11px] font-medium shadow-2xs transition-all">+ เวลาส่ง</button>
+                        <button type="button" onclick="insertVariable('{PERIOD}')" class="px-2 py-1 bg-white hover:bg-blue-50 text-blue-700 border border-slate-200 rounded-lg text-[11px] font-medium shadow-2xs transition-all">+ ห้วงวันที่</button>
+                    </div>
+
+                    <!-- Templates Quick Select -->
+                    <div id="modal-templates-bar" class="flex flex-wrap gap-1.5 p-2 bg-amber-50 rounded-xl border border-amber-200">
+                        <span class="text-[11px] font-bold text-amber-800 self-center mr-1">เทมเพลต:</span>
+                        <!-- Rendered via JS -->
+                    </div>
+
+                    <!-- Snippets & Locations Quick Select -->
+                    <div class="space-y-1.5 pt-1">
+                        <div class="flex items-center justify-between text-[11px] text-slate-600 font-semibold">
+                            <span>สถานที่ปฏิบัติงาน (คลิกเพื่อแทรก):</span>
+                        </div>
+                        <div id="modal-locations-bar" class="flex flex-wrap gap-1.5">
+                            <!-- Rendered via JS -->
+                        </div>
+
+                        <div class="flex items-center justify-between text-[11px] text-slate-600 font-semibold pt-1">
+                            <span>รายชื่อนายตำรวจ (คลิกเพื่อแทรก):</span>
+                        </div>
+                        <div id="modal-snippets-bar" class="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto p-1 bg-slate-50 rounded-lg border border-slate-200">
+                            <!-- Rendered via JS -->
+                        </div>
+                    </div>
+
+                    <!-- Textarea -->
+                    <textarea id="report-message" rows="5" placeholder="พิมพ์ข้อความรายงานที่นี่ หรือเลือกจากเทมเพลตและแทรกรายชื่อด้านบน..." class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-mono"></textarea>
+                </div>
+
+                <!-- Image Upload (Multiple) -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">รูปภาพประกอบ (เลือกได้หลายรูป)</label>
+                    <div class="flex items-center justify-center w-full">
+                        <label class="flex flex-col items-center justify-center w-full h-28 border-2 border-slate-300 border-dashed rounded-xl cursor-pointer bg-slate-50 hover:bg-slate-100 transition-all">
+                            <div class="flex flex-col items-center justify-center pt-3 pb-3">
+                                <i data-lucide="image-plus" class="w-7 h-7 text-slate-400 mb-1"></i>
+                                <p class="text-xs text-slate-600 font-medium">คลิกเพื่ออัปโหลดรูปภาพ</p>
+                                <p class="text-[10px] text-slate-400 mt-0.5">PNG, JPG, WEBP (ระบบบีบอัดอัตโนมัติ)</p>
                             </div>
-                            <div class="text-sm font-semibold text-slate-700">คลิกเพื่อเลือกรูปภาพ หรือลากไฟล์มาวางที่นี่</div>
-                            <div class="text-xs text-slate-400">บีบอัดอัตโนมัติ (ความกว้างสูงสุด 1000px • คุณภาพ 0.75) เพื่อประหยัดพื้นที่ LocalStorage</div>
-                        </div>
+                            <input type="file" id="report-images" accept="image/*" multiple class="hidden" onchange="handleImageUpload(event)">
+                        </label>
                     </div>
-
-                    <!-- Image Thumbnails Grid -->
-                    <div id="formImagePreviews" class="grid grid-cols-3 sm:grid-cols-4 gap-3 mt-3">
-                        <!-- Thumbnails injected here -->
+                    <!-- Image Previews Container -->
+                    <div id="image-preview-container" class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3">
+                        <!-- Rendered via JS -->
                     </div>
                 </div>
-            </form>
+            </div>
 
             <!-- Modal Footer -->
-            <div class="px-6 py-4 border-t border-slate-100 bg-slate-50 flex items-center justify-end space-x-3">
-                <button type="button" id="cancelFormModalBtn" class="px-4 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-200/70 transition">ยกเลิก</button>
-                <button type="button" id="saveReportBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-xl text-sm font-semibold shadow-md shadow-indigo-200 transition flex items-center space-x-2 cursor-pointer">
+            <div class="px-6 py-3 bg-slate-100 border-t border-slate-200 flex items-center justify-end space-x-3">
+                <button onclick="closeReportModal()" class="px-4 py-2 bg-white hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold border border-slate-300 transition-colors">ยกเลิก</button>
+                <button onclick="saveReport()" class="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-semibold shadow-sm transition-all flex items-center space-x-1.5">
                     <i data-lucide="save" class="w-4 h-4"></i>
                     <span>บันทึกรายงาน</span>
                 </button>
@@ -304,1189 +365,1339 @@
         </div>
     </div>
 
-    <!-- ========================================== -->
-    <!-- MODAL 2: Ready-to-Share Modal              -->
-    <!-- ========================================== -->
-    <div id="shareModal" class="fixed inset-0 bg-slate-900/75 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[94vh] flex flex-col overflow-hidden border-2 border-indigo-500">
-            <!-- Alert Top Banner -->
-            <div id="dueAlertBanner" class="bg-red-600 text-white px-5 py-3 flex items-center justify-between">
+    <!-- 2. Template Manager Modal -->
+    <div id="template-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs hidden p-4 overflow-y-auto">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[85vh] flex flex-col border border-slate-200 overflow-hidden my-auto">
+            <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
                 <div class="flex items-center space-x-2">
-                    <i data-lucide="bell-ring" class="w-5 h-5 animate-bounce"></i>
-                    <span class="font-bold text-xs sm:text-sm">ถึงเวลาส่งรายงานแล้ว! ตรวจสอบข้อมูลและแชร์เข้า LINE ได้ทันที</span>
+                    <i data-lucide="file-text" class="w-5 h-5 text-amber-400"></i>
+                    <h3 class="text-base font-bold">จัดการเทมเพลตข้อความสำเร็จรูป</h3>
                 </div>
-                <span id="shareModalTimeBadge" class="bg-white/20 px-2.5 py-0.5 rounded-full text-xs font-mono font-bold">20:00 น.</span>
+                <button onclick="closeTemplateManager()" class="text-slate-400 hover:text-white p-1 rounded-lg transition-colors">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
             </div>
-
-            <!-- Modal Header -->
-            <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
-                <div class="min-w-0 pr-2">
-                    <span class="text-xs font-bold text-indigo-600 uppercase tracking-wider">Ready-to-Share • พร้อมส่งรายงาน</span>
-                    <h3 id="shareModalTitle" class="font-bold text-lg sm:text-xl text-slate-900 truncate mt-0.5">หัวข้อรายงาน</h3>
+            <div class="p-6 overflow-y-auto space-y-4 flex-1">
+                <!-- Add New Template Form -->
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+                    <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">เพิ่มเทมเพลตใหม่</h4>
+                    <input type="hidden" id="editing-template-id">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-700 mb-1">ชื่อเทมเพลต <span class="text-red-500">*</span></label>
+                        <input type="text" id="new-template-name" placeholder="เช่น ปล่อยแถวประจำวัน, รายงานสายตรวจ" class="w-full px-3 py-2 text-xs bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-700 mb-1">เนื้อหาเทมเพลต <span class="text-red-500">*</span></label>
+                        <textarea id="new-template-content" rows="4" placeholder="พิมพ์ข้อความเทมเพลต สามารถใส่ตัวแปร {DATE}, {DAY}, {TIME}, {PERIOD} ได้..." class="w-full px-3 py-2 text-xs bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 font-mono"></textarea>
+                    </div>
+                    <div class="flex justify-end space-x-2">
+                        <button onclick="resetTemplateForm()" id="cancel-template-edit" class="hidden px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg text-xs font-medium">ยกเลิกแก้ไข</button>
+                        <button onclick="saveTemplate()" class="px-4 py-1.5 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-xs font-semibold shadow-2xs flex items-center space-x-1">
+                            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                            <span>บันทึกเทมเพลต</span>
+                        </button>
+                    </div>
                 </div>
-                <button type="button" id="closeShareModalTopBtn" class="text-slate-400 hover:text-slate-600 p-2 rounded-xl hover:bg-slate-200/60 transition shrink-0">
+
+                <!-- Template List -->
+                <div>
+                    <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider mb-2">เทมเพลตทั้งหมดในระบบ</h4>
+                    <div id="templates-list-container" class="space-y-2">
+                        <!-- Rendered via JS -->
+                    </div>
+                </div>
+            </div>
+            <div class="px-6 py-3 bg-slate-100 border-t border-slate-200 flex justify-end">
+                <button onclick="closeTemplateManager()" class="px-4 py-2 bg-white hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold border border-slate-300">ปิดหน้าต่าง</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Snippet & Location Manager Modal -->
+    <div id="snippet-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs hidden p-4 overflow-y-auto">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[85vh] flex flex-col border border-slate-200 overflow-hidden my-auto">
+            <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <i data-lucide="users" class="w-5 h-5 text-emerald-400"></i>
+                    <h3 class="text-base font-bold">จัดการรายชื่อนายตำรวจ & สถานที่</h3>
+                </div>
+                <button onclick="closeSnippetManager()" class="text-slate-400 hover:text-white p-1 rounded-lg transition-colors">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto space-y-4 flex-1">
+                <!-- Tabs -->
+                <div class="flex border-b border-slate-200">
+                    <button onclick="switchSnippetTab('police')" id="snippet-tab-police" class="px-4 py-2 text-xs font-bold border-b-2 border-emerald-600 text-emerald-700">รายชื่อนายตำรวจ</button>
+                    <button onclick="switchSnippetTab('location')" id="snippet-tab-location" class="px-4 py-2 text-xs font-semibold text-slate-500 hover:text-slate-800">สถานที่ปฏิบัติงาน</button>
+                </div>
+
+                <!-- Add New Item Form -->
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+                    <h4 id="snippet-form-title" class="text-xs font-bold text-slate-800 uppercase tracking-wider">เพิ่มรายชื่อนายตำรวจใหม่</h4>
+                    <input type="hidden" id="editing-snippet-type" value="police">
+                    <input type="hidden" id="editing-snippet-id">
+                    
+                    <div id="police-input-fields" class="space-y-3">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-medium text-slate-700 mb-1">ยศและชื่อ-นามสกุล <span class="text-red-500">*</span></label>
+                                <input type="text" id="snippet-name" placeholder="เช่น พ.ต.อ.ขวัญชัย เผือกพูนผล" class="w-full px-3 py-2 text-xs bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-700 mb-1">ตำแหน่ง <span class="text-red-500">*</span></label>
+                                <input type="text" id="snippet-position" placeholder="เช่น ผู้กำกับการ" class="w-full px-3 py-2 text-xs bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="location-input-fields" class="space-y-3 hidden">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-700 mb-1">ชื่อสถานที่ <span class="text-red-500">*</span></label>
+                            <input type="text" id="snippet-location-name" placeholder="เช่น ลานหน้า สภ.ลำปลายมาศ" class="w-full px-3 py-2 text-xs bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end space-x-2">
+                        <button onclick="resetSnippetForm()" id="cancel-snippet-edit" class="hidden px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg text-xs font-medium">ยกเลิกแก้ไข</button>
+                        <button onclick="saveSnippet()" class="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold shadow-2xs flex items-center space-x-1">
+                            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                            <span>บันทึกข้อมูล</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Items List Container -->
+                <div>
+                    <h4 id="snippet-list-title" class="text-xs font-bold text-slate-800 uppercase tracking-wider mb-2">รายชื่อนายตำรวจทั้งหมด</h4>
+                    <div id="snippets-list-container" class="space-y-2">
+                        <!-- Rendered via JS -->
+                    </div>
+                </div>
+            </div>
+            <div class="px-6 py-3 bg-slate-100 border-t border-slate-200 flex justify-between items-center">
+                <button onclick="resetDefaultSnippetsAndLocations()" class="text-xs text-rose-600 hover:underline">รีเซ็ตค่าเริ่มต้นทั้งหมด</button>
+                <button onclick="closeSnippetManager()" class="px-4 py-2 bg-white hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold border border-slate-300">ปิดหน้าต่าง</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. Ready-to-Share Modal (Ready to Post / LINE Mobile & PC) -->
+    <div id="share-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 backdrop-blur-xs hidden p-4 overflow-y-auto">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col border border-slate-200 overflow-hidden my-auto animate-in fade-in zoom-in duration-200">
+            <!-- Header -->
+            <div class="px-6 py-4 bg-emerald-700 text-white flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <i data-lucide="share-2" class="w-5 h-5"></i>
+                    <div>
+                        <h3 class="text-base font-bold">พร้อมแชร์รายงาน (Ready-to-Share)</h3>
+                        <p class="text-[11px] text-emerald-200">คัดลอกข้อความและรูปภาพเพื่อส่งเข้าแอป LINE ทันที</p>
+                    </div>
+                </div>
+                <button onclick="closeShareModal()" class="text-emerald-200 hover:text-white p-1 rounded-lg transition-colors">
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
             </div>
 
-            <!-- Modal Body -->
-            <div class="p-5 sm:p-6 overflow-y-auto space-y-5 flex-grow">
-
-                <!-- Section 1: Formatted Message (with {DATE} resolved) -->
-                <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3">
-                    <div class="flex flex-wrap items-center justify-between gap-2">
-                        <span class="text-xs font-bold text-slate-700 flex items-center space-x-1.5">
-                            <i data-lucide="file-text" class="w-4 h-4 text-indigo-600"></i>
-                            <span>ข้อความรายงาน (แปลงวันที่ปัจจุบันเรียบร้อยแล้ว)</span>
-                        </span>
-                        <button type="button" id="pcCopyTextBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3.5 py-1.5 rounded-xl text-xs font-semibold shadow-sm transition flex items-center space-x-1.5">
-                            <i data-lucide="copy" class="w-3.5 h-3.5"></i>
-                            <span>คัดลอกข้อความ</span>
-                        </button>
+            <!-- Body -->
+            <div class="p-6 overflow-y-auto space-y-5 flex-1">
+                <!-- Mobile Special Action Button (LINE Mobile) -->
+                <div class="bg-emerald-50 border border-emerald-200 p-4 rounded-2xl space-y-3">
+                    <div class="flex items-center space-x-2 text-emerald-800 font-bold text-xs">
+                        <i data-lucide="smartphone" class="w-4 h-4"></i>
+                        <span>สำหรับใช้งานบนมือถือ (LINE App)</span>
                     </div>
-                    <textarea id="shareFormattedMessage" rows="5" readonly class="w-full bg-white border border-slate-200 rounded-xl p-3 text-sm font-sarabun text-slate-800 leading-relaxed focus:outline-none select-all"></textarea>
-                </div>
-
-                <!-- Section 2: Attached Images + LINE PC Tools -->
-                <div id="shareImagesSection" class="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3">
-                    <div class="flex flex-wrap items-center justify-between gap-2">
-                        <span class="text-xs font-bold text-slate-700 flex items-center space-x-1.5">
-                            <i data-lucide="images" class="w-4 h-4 text-indigo-600"></i>
-                            <span>รูปภาพที่แนบไว้ (<span id="shareImageCount">0</span> รูป)</span>
-                        </span>
-                        <!-- LINE PC Action Buttons -->
-                        <div class="flex flex-wrap items-center gap-2">
-                            <button type="button" id="pcCopyImageBtn" class="bg-white hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 border border-slate-300 px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center space-x-1.5" title="คัดลอกรูปภาพลง Clipboard เพื่อกด Ctrl+V วางใน LINE PC">
-                                <i data-lucide="clipboard-copy" class="w-3.5 h-3.5 text-indigo-600"></i>
-                                <span>คัดลอกรูปภาพ</span>
-                            </button>
-                            <button type="button" id="downloadAllImagesBtn" class="bg-white hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 border border-slate-300 px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center space-x-1.5">
-                                <i data-lucide="download" class="w-3.5 h-3.5 text-emerald-600"></i>
-                                <span>ดาวน์โหลดรูปภาพทั้งหมด</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div id="shareImagesGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                        <!-- Attached images injected here -->
-                    </div>
-                </div>
-
-                <!-- Section 3: Mobile LINE Workflow (Optimized) -->
-                <div class="bg-emerald-50/90 border-2 border-emerald-300 rounded-2xl p-4 space-y-3.5">
-                    <div class="flex items-start space-x-3">
-                        <div class="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-sm">
-                            <i data-lucide="smartphone" class="w-5 h-5"></i>
-                        </div>
-                        <div>
-                            <h4 class="text-sm font-bold text-emerald-950">สำหรับมือถือ (LINE Mobile Workflow)</h4>
-                            <p class="text-xs text-emerald-800 mt-0.5 leading-relaxed">กดปุ่มสีเขียวด้านล่างเพื่อคัดลอกข้อความลงคลิปบอร์ดอัตโนมัติ พร้อมเปิดหน้าต่างส่งรูปภาพเข้า LINE ทันที</p>
-                        </div>
-                    </div>
-
-                    <!-- Primary Big Green Mobile Button -->
-                    <button type="button" id="mobileComboShareBtn" class="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white px-4 py-3.5 rounded-xl text-sm font-bold shadow-md shadow-emerald-200 transition flex items-center justify-center space-x-2 cursor-pointer">
-                        <i data-lucide="share-2" class="w-5 h-5"></i>
+                    <p class="text-xs text-slate-600">เนื่องจากระบบมือถือจำกัดการส่งทั้งข้อความและรูปพร้อมกัน ปุ่มนี้จะทำการ <strong class="text-slate-900">คัดลอกข้อความอัตโนมัติ</strong> ลงคลิปบอร์ดให้ทันที พร้อมเปิดหน้าต่างแชร์รูปภาพเข้า LINE</p>
+                    <button onclick="copyTextAndShareImagesMobile()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-3 px-4 rounded-xl text-xs font-bold flex items-center justify-center space-x-2 shadow-md transition-all active:scale-98">
+                        <i data-lucide="copy" class="w-4 h-4"></i>
                         <span>คัดลอกข้อความอัตโนมัติ + แชร์รูปภาพเข้า LINE</span>
                     </button>
+                </div>
 
-                    <!-- Separate 2-Step Buttons (Text First -> Image Second) -->
-                    <div class="pt-1">
-                        <div class="text-[11px] font-semibold text-emerald-800 mb-2">หรือเลือกส่งแยกทีละขั้นตอน (กรณีต้องการส่งข้อความก่อนรูปภาพ):</div>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                            <button type="button" id="mobileStep1CopyTextBtn" class="bg-white hover:bg-emerald-50 text-emerald-900 border border-emerald-300 px-3.5 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center space-x-1.5 shadow-sm">
-                                <i data-lucide="copy" class="w-3.5 h-3.5 text-emerald-600"></i>
-                                <span>1. คัดลอกข้อความ</span>
+                <!-- Step-by-step or PC Instructions -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- Step 1: Text -->
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col justify-between space-y-3">
+                        <div>
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-xs font-bold text-slate-800">ขั้นตอนที่ 1: ข้อความรายงาน</span>
+                                <span id="copy-text-status" class="text-[10px] text-emerald-600 font-medium hidden">คัดลอกแล้ว!</span>
+                            </div>
+                            <textarea id="share-text-box" rows="5" readonly class="w-full p-2.5 text-xs bg-white border border-slate-300 rounded-lg font-mono text-slate-700 focus:outline-none"></textarea>
+                        </div>
+                        <button onclick="copyReportTextOnly()" class="w-full bg-slate-800 hover:bg-slate-700 text-white py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center space-x-1.5 transition-colors">
+                            <i data-lucide="clipboard" class="w-3.5 h-3.5"></i>
+                            <span>คัดลอกเฉพาะข้อความ</span>
+                        </button>
+                    </div>
+
+                    <!-- Step 2: Images -->
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col justify-between space-y-3">
+                        <div>
+                            <span class="text-xs font-bold text-slate-800 block mb-1">ขั้นตอนที่ 2: รูปภาพประกอบ (<span id="share-image-count">0</span> รูป)</span>
+                            <div id="share-images-preview-container" class="grid grid-cols-2 gap-2 max-h-36 overflow-y-auto p-1 bg-white rounded-lg border border-slate-300">
+                                <!-- Rendered via JS -->
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <button onclick="copyAllImagesToClipboard()" class="w-full bg-slate-800 hover:bg-slate-700 text-white py-1.5 px-3 rounded-lg text-xs font-semibold flex items-center justify-center space-x-1.5 transition-colors">
+                                <i data-lucide="image" class="w-3.5 h-3.5"></i>
+                                <span>คัดลอกรูปภาพลง Clipboard (Ctrl+V)</span>
                             </button>
-                            <button type="button" id="mobileStep2ShareImgBtn" class="bg-white hover:bg-emerald-50 text-emerald-900 border border-emerald-300 px-3.5 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center space-x-1.5 shadow-sm">
-                                <i data-lucide="image" class="w-3.5 h-3.5 text-emerald-600"></i>
-                                <span>2. แชร์รูปภาพไปยังแอป</span>
+                            <button onclick="downloadAllShareImages()" class="w-full bg-white hover:bg-slate-100 text-slate-700 py-1.5 px-3 rounded-lg text-xs font-semibold border border-slate-300 flex items-center justify-center space-x-1.5 transition-colors">
+                                <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                                <span>ดาวน์โหลดรูปทั้งหมด</span>
                             </button>
                         </div>
                     </div>
                 </div>
-
             </div>
 
-            <!-- Modal Footer -->
-            <div class="px-6 py-4 border-t border-slate-100 bg-slate-50 flex flex-col sm:flex-row items-center justify-between gap-3">
-                <button type="button" id="closeShareModalBottomBtn" class="w-full sm:w-auto px-4 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-200/70 transition">ปิดหน้าต่าง</button>
-                <button type="button" id="markAsSentBtn" class="w-full sm:w-auto bg-slate-900 hover:bg-slate-800 text-white px-5 py-2.5 rounded-xl text-sm font-semibold shadow-md transition flex items-center justify-center space-x-2 cursor-pointer">
-                    <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400"></i>
-                    <span>ทำเครื่องหมายว่าส่งแล้ว (Mark as Sent)</span>
-                </button>
+            <!-- Footer -->
+            <div class="px-6 py-3 bg-slate-100 border-t border-slate-200 flex justify-end">
+                <button onclick="closeShareModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-semibold transition-colors">เสร็จสิ้น</button>
             </div>
         </div>
     </div>
 
-    <!-- ========================================== -->
-    <!-- MODAL 3: Custom Confirmation Modal         -->
-    <!-- ========================================== -->
-    <div id="confirmModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 text-center space-y-4 border border-slate-100">
-            <div class="w-12 h-12 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center mx-auto">
-                <i data-lucide="alert-triangle" class="w-6 h-6"></i>
-            </div>
-            <h4 id="confirmTitle" class="font-bold text-lg text-slate-800">ยืนยันการทำรายการ</h4>
-            <p id="confirmMessage" class="text-sm text-slate-500">คุณต้องการลบรายการนี้ใช่หรือไม่?</p>
-            <div class="flex space-x-3 pt-2">
-                <button type="button" id="cancelConfirmBtn" class="flex-1 py-2.5 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50 transition">ยกเลิก</button>
-                <button type="button" id="confirmActionBtn" class="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-sm font-semibold text-white shadow-sm transition">ยืนยัน</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Toast Notification Container -->
-    <div id="toastContainer" class="fixed bottom-5 right-5 left-5 sm:left-auto z-50 flex flex-col items-end space-y-2 pointer-events-none"></div>
-
-    <!-- ========================================== -->
-    <!-- COMPLETE SELF-CONTAINED JAVASCRIPT         -->
-    <!-- ========================================== -->
+    <!-- ================= JAVASCRIPT LOGIC ================= -->
     <script>
-        (function() {
-            // 1. APPLICATION STATE
-            const STORAGE_KEY = 'thai_report_prep_alert_v3';
-            let reports = [];
-            let currentFilter = 'all';
-            let currentViewMode = 'row'; // 'row' (default) | 'grid'
-            let currentFormImages = [];
-            let activeShareReportId = null;
-            let pendingConfirmCallback = null;
+        // --- 1. DEFAULT DATA & STORAGE KEYS ---
+        const STORAGE_KEYS = {
+            REPORTS: 'lamplaimat_reports_v3',
+            TEMPLATES: 'lamplaimat_templates_v3',
+            POLICE_SNIPPETS: 'lamplaimat_police_v3',
+            LOCATIONS: 'lamplaimat_locations_v3'
+        };
 
-            // 2. THAI DATE HELPERS
-            function formatThaiDateShort(dateObj) {
-                const thaiMonths = [
-                    'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
-                    'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
-                ];
-                const day = dateObj.getDate();
-                const month = thaiMonths[dateObj.getMonth()];
-                const buddhistYear = dateObj.getFullYear() + 543;
-                return `${day} ${month} ${buddhistYear}`;
+        const DEFAULT_POLICE_SNIPPETS = [
+            { id: 'p1', name: 'พ.ต.อ.ขวัญชัย เผือกพูนผล', position: 'ผู้กำกับการ' },
+            { id: 'p2', name: 'พ.ต.ท.พงศ์จรัส รัตนธรรมเมธี', position: 'รอง ผกก.ป.' },
+            { id: 'p3', name: 'พ.ต.ท.สมพร นาดี', position: 'สวป.(ชส.)' },
+            { id: 'p4', name: 'พ.ต.ท.นภดล แก้วชนะ', position: 'รอง ผกก.(สอบสวน)' },
+            { id: 'p5', name: 'พ.ต.ท.ศรศักดิ์ พากระโทก', position: 'สว.สอบสวน หน.งานคดี' },
+            { id: 'p6', name: 'พ.ต.ต.ศักดิ์ชัย ปิ่นศิริ', position: 'สว.(สอบสวน)' },
+            { id: 'p7', name: 'พ.ต.ท.สืบสกุล เกงขุนทด', position: 'รอง ผกก.สส.' },
+            { id: 'p8', name: 'พ.ต.ท.เฉลิมพล สว่างศรี', position: 'สว.สส.' },
+            { id: 'p9', name: 'พ.ต.ท.สมศักดิ์ ดีรักชาติ', position: 'สว.อก.' }
+        ];
+
+        const DEFAULT_LOCATIONS = [
+            { id: 'l1', name: 'ลานหน้า สภ.ลำปลายมาศ' },
+            { id: 'l2', name: 'ห้อง ศปก.สภ.ลำปลายมาศ' },
+            { id: 'l3', name: 'ห้องประชุมชั้น 3 สภ.ลำปลายมาศ' }
+        ];
+
+        const DEFAULT_TEMPLATES = [
+            {
+                id: 't1',
+                name: 'ปล่อยแถวประจำวัน',
+                content: 'เรียน ผู้บังคับบัญชา\nขอรายงานการปล่อยแถวประจำวันที่ {DATE} เวลา {TIME} ณ {loc1}\nโดยมี {p1} {pos1} เป็นประธานปล่อยแถว\nผู้ปฏิบัติหน้าที่เรียบร้อย เหตุการณ์ปกติทั่วไป'
+            },
+            {
+                id: 't2',
+                name: 'สรุปยอดประจำวัน',
+                content: 'สรุปผลการปฏิบัติราชการประจำวันที่ {DATE}\n- สถานที่: {loc1}\n- ควบคุมการปฏิบัติโดย: {p1} {pos1}\n- เหตุการณ์ทั่วไป: ปกติ ไม่มีเหตุร้ายแรง'
+            }
+        ];
+
+        // --- 2. APPLICATION STATE ---
+        let reports = [];
+        let templates = [];
+        let policeSnippets = [];
+        let locationSnippets = [];
+        
+        let currentFilter = 'all';
+        let currentSearchQuery = '';
+        let currentViewMode = 'row'; // 'row' or 'grid'
+        let currentEditingImages = []; // temporary images in modal
+        let activeShareData = null;
+
+        // --- 3. UTILITY & FORMATTER FUNCTIONS ---
+        function getThaiDateString(date = new Date()) {
+            const thaiMonths = [
+                "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
+                "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
+            ];
+            const day = date.getDate();
+            const month = thaiMonths[date.getMonth()];
+            const year = date.getFullYear() + 543;
+            return `${day} ${month} ${year}`;
+        }
+
+        function getThaiDayOfWeek(date = new Date()) {
+            const thaiDays = ["วันอาทิตย์", "วันจันทร์", "วันอังคาร", "วันพุธ", "วันพฤหัสบดี", "วันศุกร์", "วันเสาร์"];
+            return thaiDays[date.getDay()];
+        }
+
+        function formatTimeHM(timeStr) {
+            if (!timeStr) return '';
+            return timeStr + ' น.';
+        }
+
+        function processReportVariables(content, reportTime = '', startDate = '', endDate = '') {
+            const now = new Date();
+            const dateStr = getThaiDateString(now);
+            const dayStr = getThaiDayOfWeek(now);
+            const timeStr = formatTimeHM(reportTime);
+            let periodStr = '';
+            if (startDate && endDate) {
+                periodStr = `ตั้งแต่วันที่ ${startDate} ถึง ${endDate}`;
+            } else if (startDate) {
+                periodStr = `ตั้งแต่วันที่ ${startDate} เป็นต้นไป`;
+            } else {
+                periodStr = `ประจำวันที่ ${dateStr}`;
             }
 
-            function formatThaiDateFull(dateObj) {
-                const thaiDays = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
-                const dayName = thaiDays[dateObj.getDay()];
-                return `วัน${dayName}ที่ ${formatThaiDateShort(dateObj)}`;
-            }
+            let processed = content
+                .replace(/{DATE}/g, dateStr)
+                .replace(/{DAY}/g, dayStr)
+                .replace(/{TIME}/g, timeStr)
+                .replace(/{PERIOD}/g, periodStr);
 
-            function getTodayDateKey() {
-                const now = new Date();
-                const y = now.getFullYear();
-                const m = String(now.getMonth() + 1).padStart(2, '0');
-                const d = String(now.getDate()).padStart(2, '0');
-                return `${y}-${m}-${d}`;
-            }
+            // Replace police and location variables if present in snippets
+            policeSnippets.forEach((p, idx) => {
+                processed = processed.replace(new RegExp(`\\{p${idx+1}\\}`, 'g'), p.name);
+                processed = processed.replace(new RegExp(`\\{pos${idx+1}\\}`, 'g'), p.position);
+            });
 
-            function refreshLucideIcons() {
-                if (typeof lucide !== 'undefined' && typeof lucide.createIcons === 'function') {
-                    lucide.createIcons();
-                }
-            }
+            locationSnippets.forEach((l, idx) => {
+                processed = processed.replace(new RegExp(`\\{loc${idx+1}\\}`, 'g'), l.name);
+            });
 
-            // 3. DEFAULT INITIAL SAMPLE REPORT (1 ITEM)
-            function getDefaultSampleReports() {
-                return [
-                    {
-                        id: 'sample-2000',
-                        title: 'รายงานปล่อยแถวประจำวัน',
-                        time: '20:00',
-                        repeatDaily: true,
-                        message: '📢 รายงานการปล่อยแถวและตรวจสอบความเรียบร้อย\n📅 ประจำวันที่ {DATE}\n⏰ เวลา 20:00 น.\n\n✅ กำลังพล: ครบถ้วนพร้อมปฏิบัติหน้าที่\n✅ ความเรียบร้อยทั่วไป: ปกติ\n\nจึงเรียนมาเพื่อโปรดทราบครับ 🙏',
-                        images: [],
-                        status: 'pending', // 'pending' | 'due' | 'sent'
-                        lastTriggeredDate: '',
-                        lastSentDate: ''
-                    }
-                ];
-            }
+            return processed;
+        }
 
-            // 4. LOCALSTORAGE & JSON BACKUP / RESTORE
-            function loadReports() {
-                try {
-                    const raw = localStorage.getItem(STORAGE_KEY);
-                    if (raw) {
-                        const parsed = JSON.parse(raw);
-                        reports = Array.isArray(parsed) ? parsed : getDefaultSampleReports();
-                    } else {
-                        reports = getDefaultSampleReports();
-                        saveReports();
-                    }
-                } catch (err) {
-                    console.error('Failed to read localStorage:', err);
-                    reports = getDefaultSampleReports();
-                }
-
-                // Auto-reset daily repeating reports on a new calendar day
-                const todayKey = getTodayDateKey();
-                let changed = false;
-                reports.forEach(rep => {
-                    if (rep.repeatDaily && rep.status === 'sent' && rep.lastSentDate && rep.lastSentDate !== todayKey) {
-                        rep.status = 'pending';
-                        rep.lastTriggeredDate = '';
-                        changed = true;
-                    }
-                });
-                if (changed) saveReports();
-            }
-
-            function saveReports() {
-                try {
-                    localStorage.setItem(STORAGE_KEY, JSON.stringify(reports));
-                    return true;
-                } catch (err) {
-                    console.error('LocalStorage save failed:', err);
-                    showToast('พื้นที่จัดเก็บ LocalStorage เต็ม! กรุณาลบรูปภาพบางส่วนหรือ Export สำรองข้อมูลไว้', 'error');
-                    return false;
-                }
-            }
-
-            function exportReportsJson() {
-                try {
-                    const dataStr = JSON.stringify(reports, null, 2);
-                    const blob = new Blob([dataStr], { type: 'application/json' });
-                    const url = URL.createObjectURL(blob);
-                    const link = document.createElement('a');
-                    link.href = url;
-                    link.download = `report_backup_${getTodayDateKey()}.json`;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                    URL.revokeObjectURL(url);
-                    showToast('ส่งออกไฟล์สำรองข้อมูล (Export JSON) เรียบร้อยแล้ว', 'success');
-                } catch (err) {
-                    showToast('เกิดข้อผิดพลาดในการส่งออกไฟล์ JSON', 'error');
-                }
-            }
-
-            function handleImportJsonFile(event) {
-                const file = event.target.files && event.target.files[0];
-                if (!file) return;
-
+        // Image compression helper
+        function compressImage(file, maxWidth = 1000, quality = 0.75) {
+            return new Promise((resolve, reject) => {
                 const reader = new FileReader();
-                reader.onload = function(e) {
-                    try {
-                        const imported = JSON.parse(e.target.result);
-                        if (!Array.isArray(imported)) {
-                            throw new Error('Invalid JSON structure');
-                        }
-                        const validItems = imported.filter(item => item && typeof item.title === 'string' && typeof item.time === 'string');
-                        if (validItems.length === 0) {
-                            showToast('ไม่พบข้อมูลรายงานที่ถูกต้องในไฟล์ JSON นี้', 'warning');
-                            return;
-                        }
-                        reports = validItems;
-                        if (saveReports()) {
-                            renderReports();
-                            updateClockAndTimers();
-                            showToast(`นำเข้าข้อมูลสำเร็จ (${validItems.length} รายการ)`, 'success');
-                        }
-                    } catch (err) {
-                        showToast('ไฟล์ JSON ไม่ถูกต้อง ไม่สามารถนำเข้าข้อมูลได้', 'error');
-                    }
-                };
-                reader.readAsText(file);
-                event.target.value = '';
-            }
-
-            // 5. WEB AUDIO API CHIME SOUND & BROWSER NOTIFICATIONS
-            function playBellChime() {
-                try {
-                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-                    if (!AudioCtx) return;
-                    const ctx = new AudioCtx();
-                    if (ctx.state === 'suspended') {
-                        ctx.resume();
-                    }
-
-                    const notes = [
-                        { freq: 587.33, start: 0, duration: 0.35 },    // D5
-                        { freq: 880.00, start: 0.16, duration: 0.55 }, // A5
-                        { freq: 1174.66, start: 0.34, duration: 0.8 }  // D6
-                    ];
-
-                    notes.forEach(n => {
-                        const osc = ctx.createOscillator();
-                        const gain = ctx.createGain();
-                        osc.type = 'sine';
-                        osc.frequency.setValueAtTime(n.freq, ctx.currentTime + n.start);
-
-                        gain.gain.setValueAtTime(0.001, ctx.currentTime + n.start);
-                        gain.gain.exponentialRampToValueAtTime(0.28, ctx.currentTime + n.start + 0.03);
-                        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + n.start + n.duration);
-
-                        osc.connect(gain);
-                        gain.connect(ctx.destination);
-
-                        osc.start(ctx.currentTime + n.start);
-                        osc.stop(ctx.currentTime + n.start + n.duration);
-                    });
-                } catch (err) {
-                    console.warn('Web Audio API blocked or unavailable:', err);
-                }
-            }
-
-            function requestBrowserNotification() {
-                if (!('Notification' in window)) {
-                    showToast('เบราว์เซอร์นี้ไม่รองรับการแจ้งเตือนบนหน้าจอ', 'warning');
-                    return;
-                }
-                Notification.requestPermission().then(perm => {
-                    updateNotifButtonState();
-                    if (perm === 'granted') {
-                        showToast('เปิดรับการแจ้งเตือนผ่านเบราว์เซอร์เรียบร้อยแล้ว', 'success');
-                    } else {
-                        showToast('กรุณาอนุญาตการแจ้งเตือนในการตั้งค่าเบราว์เซอร์', 'warning');
-                    }
-                });
-            }
-
-            function updateNotifButtonState() {
-                const btnText = document.getElementById('notifBtnText');
-                const icon = document.getElementById('notifIcon');
-                if ('Notification' in window && Notification.permission === 'granted') {
-                    if (btnText) btnText.textContent = 'เปิดการแจ้งเตือนแล้ว';
-                    if (icon) {
-                        icon.classList.remove('text-amber-500');
-                        icon.classList.add('text-emerald-600');
-                    }
-                }
-            }
-
-            function triggerSystemBrowserNotif(title, body) {
-                if ('Notification' in window && Notification.permission === 'granted') {
-                    try {
-                        new Notification(title, { body });
-                    } catch (err) {
-                        console.warn('Notification error:', err);
-                    }
-                }
-            }
-
-            // 6. REAL-TIME CLOCK, COUNTDOWN & DUE TRIGGER CHECKER
-            function updateClockAndTimers() {
-                const now = new Date();
-                const hh = String(now.getHours()).padStart(2, '0');
-                const mm = String(now.getMinutes()).padStart(2, '0');
-                const ss = String(now.getSeconds()).padStart(2, '0');
-                const currentHM = `${hh}:${mm}`;
-                const todayKey = getTodayDateKey();
-
-                const clockEl = document.getElementById('realtimeClock');
-                const dateEl = document.getElementById('currentDateDisplay');
-                if (clockEl) clockEl.textContent = `${hh}:${mm}:${ss}`;
-                if (dateEl) dateEl.textContent = formatThaiDateFull(now);
-
-                let triggeredReport = null;
-                let hasChanges = false;
-
-                reports.forEach(rep => {
-                    if (rep.status === 'pending' && rep.time === currentHM && rep.lastTriggeredDate !== todayKey) {
-                        rep.status = 'due';
-                        rep.lastTriggeredDate = todayKey;
-                        hasChanges = true;
-                        triggeredReport = rep;
-                    }
-                });
-
-                if (hasChanges) {
-                    saveReports();
-                    renderReports();
-                    if (triggeredReport) {
-                        playBellChime();
-                        triggerSystemBrowserNotif(
-                            `⏰ ถึงเวลาส่งรายงาน: ${triggeredReport.title}`,
-                            `กำหนดเวลา ${triggeredReport.time} น. คลิกเพื่อแชร์ข้อความและรูปภาพเข้า LINE`
-                        );
-                        openShareModal(triggeredReport.id, true);
-                    }
-                }
-
-                updateCountdownDisplay(now);
-            }
-
-            function updateCountdownDisplay(now) {
-                const titleEl = document.getElementById('nextReportTitle');
-                const timeEl = document.getElementById('nextReportTime');
-                const timerEl = document.getElementById('countdownTimer');
-
-                const pendingList = reports.filter(r => r.status === 'pending');
-                if (pendingList.length === 0) {
-                    const dueList = reports.filter(r => r.status === 'due');
-                    if (dueList.length > 0) {
-                        titleEl.textContent = `🚨 ถึงเวลาส่งรายงานแล้ว (${dueList.length} รายการ)`;
-                        timeEl.textContent = `รายการแรก: ${dueList[0].title} (${dueList[0].time} น.)`;
-                        timerEl.textContent = '00:00:00';
-                        timerEl.className = 'text-2xl sm:text-3xl font-bold font-mono text-red-600 animate-pulse';
-                    } else {
-                        titleEl.textContent = 'ไม่มีรายการรอส่ง';
-                        timeEl.textContent = 'กดปุ่ม "+ สร้างรายงานใหม่" เพื่อตั้งเวลาแจ้งเตือน';
-                        timerEl.textContent = '--:--:--';
-                        timerEl.className = 'text-2xl sm:text-3xl font-bold font-mono text-indigo-700';
-                    }
-                    return;
-                }
-
-                let nearestRep = null;
-                let minDiff = Infinity;
-
-                pendingList.forEach(rep => {
-                    const [hStr, mStr] = rep.time.split(':');
-                    const target = new Date(now);
-                    target.setHours(parseInt(hStr, 10), parseInt(mStr, 10), 0, 0);
-                    if (target <= now) {
-                        target.setDate(target.getDate() + 1);
-                    }
-                    const diff = target - now;
-                    if (diff < minDiff) {
-                        minDiff = diff;
-                        nearestRep = rep;
-                    }
-                });
-
-                if (nearestRep) {
-                    titleEl.textContent = nearestRep.title;
-                    timeEl.textContent = `กำหนดแจ้งเตือนเวลา ${nearestRep.time} น.`;
-
-                    const totalSec = Math.max(0, Math.floor(minDiff / 1000));
-                    const hrs = String(Math.floor(totalSec / 3600)).padStart(2, '0');
-                    const mins = String(Math.floor((totalSec % 3600) / 60)).padStart(2, '0');
-                    const secs = String(totalSec % 60).padStart(2, '0');
-
-                    timerEl.textContent = `${hrs}:${mins}:${secs}`;
-                    timerEl.className = 'text-2xl sm:text-3xl font-bold font-mono text-indigo-700';
-                }
-            }
-
-            // 7. RENDER REPORTS (ROW VIEW & GRID VIEW)
-            function setFilter(filter) {
-                currentFilter = filter;
-                document.querySelectorAll('.filter-tab').forEach(btn => {
-                    if (btn.dataset.filter === filter) {
-                        btn.className = 'filter-tab px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium bg-indigo-600 text-white shadow-sm transition whitespace-nowrap';
-                    } else {
-                        btn.className = 'filter-tab px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium bg-slate-100 text-slate-600 hover:bg-slate-200/70 transition whitespace-nowrap';
-                    }
-                });
-                renderReports();
-            }
-
-            function setViewMode(mode) {
-                currentViewMode = mode;
-                const rowBtn = document.getElementById('viewRowBtn');
-                const gridBtn = document.getElementById('viewGridBtn');
-                const container = document.getElementById('reportsContainer');
-
-                if (mode === 'row') {
-                    rowBtn.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold bg-white text-indigo-600 shadow-sm transition flex items-center space-x-1.5';
-                    gridBtn.className = 'px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 transition flex items-center space-x-1.5';
-                    container.className = 'space-y-3';
-                } else {
-                    gridBtn.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold bg-white text-indigo-600 shadow-sm transition flex items-center space-x-1.5';
-                    rowBtn.className = 'px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 transition flex items-center space-x-1.5';
-                    container.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4';
-                }
-                renderReports();
-            }
-
-            function resolveMessageVariables(rawMsg) {
-                const thaiDateStr = formatThaiDateShort(new Date());
-                return rawMsg.replace(/\{DATE\}/g, thaiDateStr);
-            }
-
-            function renderReports() {
-                document.getElementById('count-all').textContent = reports.length;
-                document.getElementById('count-pending').textContent = reports.filter(r => r.status === 'pending').length;
-                document.getElementById('count-due').textContent = reports.filter(r => r.status === 'due').length;
-                document.getElementById('count-sent').textContent = reports.filter(r => r.status === 'sent').length;
-
-                const filtered = reports
-                    .filter(r => currentFilter === 'all' || r.status === currentFilter)
-                    .sort((a, b) => {
-                        if (a.status === 'due' && b.status !== 'due') return -1;
-                        if (b.status === 'due' && a.status !== 'due') return 1;
-                        return a.time.localeCompare(b.time);
-                    });
-
-                const container = document.getElementById('reportsContainer');
-                const emptyState = document.getElementById('emptyState');
-
-                if (filtered.length === 0) {
-                    container.innerHTML = '';
-                    emptyState.classList.remove('hidden');
-                    refreshLucideIcons();
-                    return;
-                }
-
-                emptyState.classList.add('hidden');
-
-                if (currentViewMode === 'row') {
-                    const tableHeader = `
-                        <div class="hidden lg:grid lg:grid-cols-12 gap-4 px-5 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-xs font-semibold text-slate-600">
-                            <div class="col-span-2">เวลาแจ้งเตือน</div>
-                            <div class="col-span-4">หัวข้อ & ข้อความ (แปลงวันที่แล้ว)</div>
-                            <div class="col-span-2">รูปภาพแนบ</div>
-                            <div class="col-span-1 text-center">สถานะ</div>
-                            <div class="col-span-3 text-right">การจัดการ / แชร์</div>
-                        </div>
-                    `;
-
-                    const rowsHtml = filtered.map(rep => {
-                        let statusBadge = '';
-                        let rowStyle = 'border-slate-200 hover:border-indigo-300';
-                        let timeBadgeStyle = 'bg-slate-900 text-white';
-
-                        if (rep.status === 'due') {
-                            statusBadge = `<span class="bg-red-100 text-red-700 text-xs font-bold px-2.5 py-1 rounded-full inline-flex items-center space-x-1 whitespace-nowrap"><i data-lucide="bell-ring" class="w-3.5 h-3.5"></i><span>ถึงเวลาส่งแล้ว</span></span>`;
-                            rowStyle = 'border-red-400 bg-red-50/20 animate-urgent ring-1 ring-red-200';
-                            timeBadgeStyle = 'bg-red-600 text-white';
-                        } else if (rep.status === 'pending') {
-                            statusBadge = `<span class="bg-amber-100 text-amber-800 text-xs font-semibold px-2.5 py-1 rounded-full inline-flex items-center space-x-1 whitespace-nowrap"><i data-lucide="clock" class="w-3.5 h-3.5"></i><span>รอส่ง</span></span>`;
-                        } else {
-                            statusBadge = `<span class="bg-emerald-100 text-emerald-800 text-xs font-semibold px-2.5 py-1 rounded-full inline-flex items-center space-x-1 whitespace-nowrap"><i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i><span>ส่งแล้ว</span></span>`;
-                            timeBadgeStyle = 'bg-slate-400 text-white';
-                        }
-
-                        const resolvedPreview = resolveMessageVariables(rep.message).replace(/\n+/g, ' ');
-                        const imgCount = (rep.images || []).length;
-                        const thumbsHtml = imgCount > 0
-                            ? `<div class="flex items-center space-x-2">
-                                <div class="flex -space-x-2 overflow-hidden shrink-0">
-                                    ${rep.images.slice(0, 3).map(src => `<img src="${src}" class="h-9 w-9 rounded-lg ring-2 ring-white object-cover bg-slate-100">`).join('')}
-                                </div>
-                                <span class="text-xs font-medium text-slate-600">${imgCount} รูป</span>
-                               </div>`
-                            : `<span class="text-xs text-slate-400 flex items-center space-x-1"><i data-lucide="image-off" class="w-3.5 h-3.5"></i><span>ไม่มีรูป</span></span>`;
-
-                        return `
-                            <div class="bg-white rounded-2xl border ${rowStyle} p-4 lg:px-5 lg:py-3.5 shadow-sm transition flex flex-col lg:grid lg:grid-cols-12 lg:items-center gap-3 lg:gap-4">
-                                <div class="lg:col-span-2 flex items-center justify-between lg:justify-start space-x-2">
-                                    <div class="flex items-center space-x-2">
-                                        <span class="${timeBadgeStyle} font-mono font-bold text-sm px-3 py-1.5 rounded-xl">${rep.time} น.</span>
-                                        ${rep.repeatDaily ? '<span class="text-slate-400 bg-slate-100 p-1.5 rounded-lg" title="แจ้งเตือนซ้ำทุกวัน"><i data-lucide="repeat" class="w-3.5 h-3.5"></i></span>' : ''}
-                                    </div>
-                                    <div class="lg:hidden">${statusBadge}</div>
-                                </div>
-
-                                <div class="lg:col-span-4 min-w-0">
-                                    <h3 class="font-bold text-sm sm:text-base text-slate-800 truncate">${escapeHtml(rep.title)}</h3>
-                                    <p class="text-xs text-slate-500 font-sarabun truncate mt-0.5">${escapeHtml(resolvedPreview)}</p>
-                                </div>
-
-                                <div class="lg:col-span-2 flex items-center justify-between lg:justify-start border-t lg:border-t-0 pt-2 lg:pt-0 border-slate-100">
-                                    ${thumbsHtml}
-                                </div>
-
-                                <div class="hidden lg:flex lg:col-span-1 justify-center">
-                                    ${statusBadge}
-                                </div>
-
-                                <div class="lg:col-span-3 flex items-center justify-end space-x-1.5 border-t lg:border-t-0 pt-2.5 lg:pt-0 border-slate-100">
-                                    <button type="button" data-action="share" data-id="${rep.id}" class="flex-1 lg:flex-initial ${rep.status === 'due' ? 'bg-red-600 hover:bg-red-700 text-white shadow-red-200' : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-200'} px-3.5 py-2 rounded-xl text-xs font-semibold shadow-sm transition flex items-center justify-center space-x-1.5 whitespace-nowrap">
-                                        <i data-lucide="send" class="w-3.5 h-3.5 pointer-events-none"></i>
-                                        <span class="pointer-events-none">พร้อมแชร์</span>
-                                    </button>
-                                    <button type="button" data-action="edit" data-id="${rep.id}" class="p-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition" title="แก้ไข">
-                                        <i data-lucide="pencil" class="w-4 h-4 pointer-events-none"></i>
-                                    </button>
-                                    <button type="button" data-action="delete" data-id="${rep.id}" class="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition" title="ลบ">
-                                        <i data-lucide="trash-2" class="w-4 h-4 pointer-events-none"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        `;
-                    }).join('');
-
-                    container.innerHTML = tableHeader + rowsHtml;
-                } else {
-                    // Grid View
-                    container.innerHTML = filtered.map(rep => {
-                        let statusBadge = '';
-                        let cardStyle = 'border-slate-200';
-                        if (rep.status === 'due') {
-                            statusBadge = `<span class="bg-red-100 text-red-700 text-xs font-bold px-2.5 py-1 rounded-full inline-flex items-center space-x-1"><i data-lucide="bell-ring" class="w-3.5 h-3.5"></i><span>ถึงเวลาส่งแล้ว</span></span>`;
-                            cardStyle = 'border-red-400 animate-urgent ring-2 ring-red-100';
-                        } else if (rep.status === 'pending') {
-                            statusBadge = `<span class="bg-amber-100 text-amber-800 text-xs font-semibold px-2.5 py-1 rounded-full inline-flex items-center space-x-1"><i data-lucide="clock" class="w-3.5 h-3.5"></i><span>รอส่ง</span></span>`;
-                        } else {
-                            statusBadge = `<span class="bg-emerald-100 text-emerald-800 text-xs font-semibold px-2.5 py-1 rounded-full inline-flex items-center space-x-1"><i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i><span>ส่งแล้ว</span></span>`;
-                        }
-
-                        const resolvedText = resolveMessageVariables(rep.message);
-                        const imgCount = (rep.images || []).length;
-                        const imagesFooter = imgCount > 0
-                            ? `<div class="flex items-center space-x-2 mt-3 pt-3 border-t border-slate-100">
-                                <div class="flex -space-x-2 overflow-hidden">
-                                    ${rep.images.slice(0, 3).map(src => `<img src="${src}" class="h-10 w-10 rounded-lg ring-2 ring-white object-cover bg-slate-100">`).join('')}
-                                </div>
-                                <span class="text-xs font-medium text-slate-600">แนบรูปภาพ ${imgCount} รูป</span>
-                               </div>`
-                            : `<div class="flex items-center space-x-1.5 mt-3 pt-3 border-t border-slate-100 text-xs text-slate-400">
-                                <i data-lucide="image-off" class="w-3.5 h-3.5"></i>
-                                <span>ไม่มีรูปภาพแนบ</span>
-                               </div>`;
-
-                        return `
-                            <div class="bg-white rounded-2xl border ${cardStyle} p-5 shadow-sm hover:shadow-md transition flex flex-col justify-between">
-                                <div>
-                                    <div class="flex items-center justify-between gap-2 mb-3">
-                                        <div class="flex items-center space-x-2">
-                                            <span class="bg-slate-900 text-white font-mono font-bold text-sm px-3 py-1 rounded-xl">${rep.time} น.</span>
-                                            ${rep.repeatDaily ? '<span class="text-slate-400" title="แจ้งเตือนซ้ำทุกวัน"><i data-lucide="repeat" class="w-3.5 h-3.5"></i></span>' : ''}
-                                        </div>
-                                        ${statusBadge}
-                                    </div>
-                                    <h3 class="font-bold text-base text-slate-800 mb-1.5 line-clamp-1">${escapeHtml(rep.title)}</h3>
-                                    <p class="text-xs text-slate-600 font-sarabun line-clamp-3 whitespace-pre-line bg-slate-50 p-3 rounded-xl border border-slate-100">${escapeHtml(resolvedText)}</p>
-                                    ${imagesFooter}
-                                </div>
-
-                                <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
-                                    <button type="button" data-action="share" data-id="${rep.id}" class="flex-1 ${rep.status === 'due' ? 'bg-red-600 hover:bg-red-700 text-white shadow-red-200' : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-200'} py-2 px-3 rounded-xl text-xs font-semibold shadow-sm transition flex items-center justify-center space-x-1.5">
-                                        <i data-lucide="send" class="w-3.5 h-3.5 pointer-events-none"></i>
-                                        <span class="pointer-events-none">พร้อมแชร์รายงาน</span>
-                                    </button>
-                                    <button type="button" data-action="edit" data-id="${rep.id}" class="p-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition" title="แก้ไข">
-                                        <i data-lucide="pencil" class="w-4 h-4 pointer-events-none"></i>
-                                    </button>
-                                    <button type="button" data-action="delete" data-id="${rep.id}" class="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition" title="ลบ">
-                                        <i data-lucide="trash-2" class="w-4 h-4 pointer-events-none"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        `;
-                    }).join('');
-                }
-
-                refreshLucideIcons();
-            }
-
-            // 8. CREATE / EDIT FORM & IMAGE COMPRESSION (MAX 1000PX, QUALITY 0.75)
-            function openFormModal(id = null) {
-                const modal = document.getElementById('formModal');
-                const titleEl = document.getElementById('formModalTitle');
-                const previewDateEl = document.getElementById('sampleThaiDatePreview');
-                if (previewDateEl) previewDateEl.textContent = formatThaiDateShort(new Date());
-
-                if (id) {
-                    const rep = reports.find(r => r.id === id);
-                    if (!rep) return;
-                    titleEl.textContent = 'แก้ไขรายงาน';
-                    document.getElementById('reportId').value = rep.id;
-                    document.getElementById('reportTitle').value = rep.title;
-                    document.getElementById('reportTime').value = rep.time;
-                    document.getElementById('reportRepeat').checked = rep.repeatDaily;
-                    document.getElementById('reportMessage').value = rep.message;
-                    currentFormImages = [...(rep.images || [])];
-                } else {
-                    titleEl.textContent = 'สร้างรายงานใหม่';
-                    document.getElementById('reportId').value = '';
-                    document.getElementById('reportTitle').value = '';
-                    document.getElementById('reportTime').value = '20:00';
-                    document.getElementById('reportRepeat').checked = true;
-                    document.getElementById('reportMessage').value = '';
-                    currentFormImages = [];
-                }
-
-                renderFormThumbnails();
-                modal.classList.remove('hidden');
-                refreshLucideIcons();
-            }
-
-            function closeFormModal() {
-                document.getElementById('formModal').classList.add('hidden');
-            }
-
-            function insertDateToken() {
-                const textarea = document.getElementById('reportMessage');
-                const token = '{DATE}';
-                const start = textarea.selectionStart || 0;
-                const end = textarea.selectionEnd || 0;
-                textarea.value = textarea.value.slice(0, start) + token + textarea.value.slice(end);
-                textarea.focus();
-                textarea.selectionStart = textarea.selectionEnd = start + token.length;
-            }
-
-            function applyStandardLineupTemplate() {
-                const timeVal = document.getElementById('reportTime').value || '20:00';
-                const template = `📢 รายงานการปล่อยแถวและตรวจสอบความเรียบร้อย\n📅 ประจำวันที่ {DATE}\n⏰ เวลา ${timeVal} น.\n\n✅ กำลังพล: ครบถ้วนพร้อมปฏิบัติหน้าที่\n✅ ความเรียบร้อยทั่วไป: ปกติ\n\nจึงเรียนมาเพื่อโปรดทราบครับ 🙏`;
-                document.getElementById('reportMessage').value = template;
-                if (!document.getElementById('reportTitle').value.trim()) {
-                    document.getElementById('reportTitle').value = 'รายงานปล่อยแถวประจำวัน';
-                }
-                showToast('เติมเทมเพลตข้อความปล่อยแถวเรียบร้อยแล้ว', 'success');
-            }
-
-            function handleImageFilesSelected(event) {
-                const files = Array.from(event.target.files || []);
-                if (!files.length) return;
-
-                if (currentFormImages.length + files.length > 8) {
-                    showToast('แนบรูปภาพได้สูงสุด 8 รูปต่อ 1 รายงาน', 'warning');
-                    event.target.value = '';
-                    return;
-                }
-
-                files.forEach(file => {
-                    if (!file.type.startsWith('image/')) return;
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        const img = new Image();
-                        img.onload = function() {
-                            const canvas = document.createElement('canvas');
-                            let width = img.width;
-                            let height = img.height;
-                            const maxWidth = 1000;
-
-                            if (width > maxWidth) {
-                                height = Math.round((height * maxWidth) / width);
-                                width = maxWidth;
-                            }
-
-                            canvas.width = width;
-                            canvas.height = height;
-                            const ctx = canvas.getContext('2d');
-                            ctx.drawImage(img, 0, 0, width, height);
-
-                            const compressedBase64 = canvas.toDataURL('image/jpeg', 0.75);
-                            currentFormImages.push(compressedBase64);
-                            renderFormThumbnails();
-                        };
-                        img.src = e.target.result;
-                    };
-                    reader.readAsDataURL(file);
-                });
-
-                event.target.value = '';
-            }
-
-            function renderFormThumbnails() {
-                const grid = document.getElementById('formImagePreviews');
-                if (currentFormImages.length === 0) {
-                    grid.innerHTML = '';
-                    return;
-                }
-                grid.innerHTML = currentFormImages.map((src, idx) => `
-                    <div class="relative group rounded-xl overflow-hidden border border-slate-200 aspect-square bg-slate-100">
-                        <img src="${src}" class="w-full h-full object-cover">
-                        <button type="button" data-remove-thumb="${idx}" class="absolute top-1.5 right-1.5 bg-red-600 hover:bg-red-700 text-white w-6 h-6 rounded-full flex items-center justify-center shadow-md transition" title="ลบรูปภาพนี้">
-                            <i data-lucide="x" class="w-3.5 h-3.5 pointer-events-none"></i>
-                        </button>
-                    </div>
-                `).join('');
-                refreshLucideIcons();
-            }
-
-            function saveReportForm() {
-                const id = document.getElementById('reportId').value;
-                const title = document.getElementById('reportTitle').value.trim();
-                const time = document.getElementById('reportTime').value;
-                const repeatDaily = document.getElementById('reportRepeat').checked;
-                const message = document.getElementById('reportMessage').value.trim();
-
-                if (!title) {
-                    showToast('กรุณากรอกหัวข้อรายงาน', 'error');
-                    document.getElementById('reportTitle').focus();
-                    return;
-                }
-                if (!time) {
-                    showToast('กรุณาระบุเวลาแจ้งเตือน', 'error');
-                    document.getElementById('reportTime').focus();
-                    return;
-                }
-                if (!message) {
-                    showToast('กรุณาพิมพ์ข้อความรายงาน', 'error');
-                    document.getElementById('reportMessage').focus();
-                    return;
-                }
-
-                const snapshot = JSON.parse(JSON.stringify(reports));
-
-                if (id) {
-                    const idx = reports.findIndex(r => r.id === id);
-                    if (idx !== -1) {
-                        reports[idx] = {
-                            ...reports[idx],
-                            title,
-                            time,
-                            repeatDaily,
-                            message,
-                            images: [...currentFormImages],
-                            status: 'pending',
-                            lastTriggeredDate: ''
-                        };
-                    }
-                } else {
-                    reports.push({
-                        id: 'rep-' + Date.now(),
-                        title,
-                        time,
-                        repeatDaily,
-                        message,
-                        images: [...currentFormImages],
-                        status: 'pending',
-                        lastTriggeredDate: '',
-                        lastSentDate: ''
-                    });
-                }
-
-                if (!saveReports()) {
-                    reports = snapshot;
-                    return;
-                }
-
-                closeFormModal();
-                renderReports();
-                updateClockAndTimers();
-                showToast(id ? 'บันทึกการแก้ไขรายงานเรียบร้อย' : 'สร้างรายงานใหม่เรียบร้อยแล้ว', 'success');
-            }
-
-            function confirmDeleteReport(id) {
-                openConfirmModal(
-                    'ยืนยันการลบรายงาน',
-                    'คุณต้องการลบรายการรายงานนี้ใช่หรือไม่? (ไม่สามารถกู้คืนได้)',
-                    () => {
-                        reports = reports.filter(r => r.id !== id);
-                        saveReports();
-                        renderReports();
-                        updateClockAndTimers();
-                        showToast('ลบรายการรายงานเรียบร้อยแล้ว', 'info');
-                    }
-                );
-            }
-
-            // 9. READY-TO-SHARE MODAL & LINE WORKFLOW (MOBILE & PC)
-            function openShareModal(id, triggeredByDueAlert = false) {
-                const rep = reports.find(r => r.id === id);
-                if (!rep) return;
-
-                activeShareReportId = id;
-
-                const banner = document.getElementById('dueAlertBanner');
-                if (triggeredByDueAlert || rep.status === 'due') {
-                    banner.classList.remove('hidden');
-                } else {
-                    banner.classList.add('hidden');
-                }
-
-                document.getElementById('shareModalTitle').textContent = rep.title;
-                document.getElementById('shareModalTimeBadge').textContent = `${rep.time} น.`;
-                document.getElementById('shareFormattedMessage').value = resolveMessageVariables(rep.message);
-
-                const imgSection = document.getElementById('shareImagesSection');
-                const imgGrid = document.getElementById('shareImagesGrid');
-                const imgCount = document.getElementById('shareImageCount');
-
-                if (rep.images && rep.images.length > 0) {
-                    imgSection.classList.remove('hidden');
-                    imgCount.textContent = rep.images.length;
-                    imgGrid.innerHTML = rep.images.map((src, idx) => `
-                        <div class="rounded-xl overflow-hidden border border-slate-200 bg-white shadow-sm">
-                            <img src="${src}" class="w-full h-36 object-cover">
-                            <div class="px-2.5 py-2 flex items-center justify-between border-t border-slate-100">
-                                <span class="text-xs font-medium text-slate-600">รูปที่ ${idx + 1}</span>
-                                <button type="button" data-dl-single-img="${idx}" class="text-xs font-semibold text-indigo-600 hover:underline">บันทึก</button>
-                            </div>
-                        </div>
-                    `).join('');
-                } else {
-                    imgSection.classList.add('hidden');
-                }
-
-                document.getElementById('shareModal').classList.remove('hidden');
-                refreshLucideIcons();
-            }
-
-            function closeShareModal() {
-                document.getElementById('shareModal').classList.add('hidden');
-            }
-
-            function copyFormattedTextToClipboard(customToastMsg = null) {
-                const textarea = document.getElementById('shareFormattedMessage');
-                textarea.select();
-                textarea.setSelectionRange(0, 99999);
-
-                try {
-                    document.execCommand('copy');
-                    showToast(
-                        customToastMsg || 'คัดลอกข้อความแล้ว! เปิด LINE แล้วกดวาง (Paste) ได้เลย',
-                        'success'
-                    );
-                    return true;
-                } catch (err) {
-                    showToast('ไม่สามารถคัดลอกอัตโนมัติได้ กรุณากด Ctrl+C', 'error');
-                    return false;
-                }
-            }
-
-            async function dataUrlToImageFile(dataUrl, filename) {
-                const res = await fetch(dataUrl);
-                const blob = await res.blob();
-                return new File([blob], filename, { type: blob.type || 'image/jpeg' });
-            }
-
-            function dataUrlToPngBlob(dataUrl) {
-                return new Promise(resolve => {
+                reader.onload = (e) => {
                     const img = new Image();
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
-                        canvas.width = img.width;
-                        canvas.height = img.height;
+                        let width = img.width;
+                        let height = img.height;
+                        if (width > maxWidth) {
+                            height = Math.round((height * maxWidth) / width);
+                            width = maxWidth;
+                        }
+                        canvas.width = width;
+                        canvas.height = height;
                         const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0);
-                        canvas.toBlob(blob => resolve(blob), 'image/png');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        resolve(canvas.toDataURL('image/jpeg', quality));
                     };
-                    img.src = dataUrl;
-                });
-            }
-
-            async function copyImageForLinePC() {
-                const rep = reports.find(r => r.id === activeShareReportId);
-                if (!rep || !rep.images || rep.images.length === 0) return;
-
-                try {
-                    const pngBlob = await dataUrlToPngBlob(rep.images[0]);
-                    await navigator.clipboard.write([
-                        new ClipboardItem({ 'image/png': pngBlob })
-                    ]);
-                    showToast('คัดลอกรูปภาพลง Clipboard แล้ว! กดวาง (Ctrl+V) ใน LINE PC ได้เลย', 'success');
-                } catch (err) {
-                    showToast('เบราว์เซอร์จำกัดการคัดลอกรูปภาพ กรุณากด "ดาวน์โหลดรูปภาพทั้งหมด" แทนครับ', 'warning');
-                }
-            }
-
-            function triggerSingleDownload(dataUrl, filename) {
-                const a = document.createElement('a');
-                a.href = dataUrl;
-                a.download = filename;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-            }
-
-            function downloadAllReportImages() {
-                const rep = reports.find(r => r.id === activeShareReportId);
-                if (!rep || !rep.images || rep.images.length === 0) return;
-
-                rep.images.forEach((src, idx) => {
-                    setTimeout(() => {
-                        triggerSingleDownload(src, `report_${rep.time.replace(':', '')}_img${idx + 1}.jpg`);
-                    }, idx * 280);
-                });
-                showToast(`กำลังดาวน์โหลดรูปภาพทั้งหมด ${rep.images.length} รูป...`, 'success');
-            }
-
-            // Share images via Web Share API (with optional auto-copy text first for LINE Mobile)
-            async function shareImagesToMobileApp(autoCopyTextFirst = false) {
-                const rep = reports.find(r => r.id === activeShareReportId);
-                if (!rep) return;
-
-                const formattedText = document.getElementById('shareFormattedMessage').value;
-                const hasImages = rep.images && rep.images.length > 0;
-
-                if (autoCopyTextFirst) {
-                    copyFormattedTextToClipboard('คัดลอกข้อความแล้ว! เลือกห้องแชท LINE ส่งรูป แล้วกดวางข้อความได้เลย');
-                }
-
-                if (navigator.share) {
-                    try {
-                        if (hasImages) {
-                            const files = [];
-                            for (let i = 0; i < rep.images.length; i++) {
-                                const f = await dataUrlToImageFile(rep.images[i], `report_${i + 1}.jpg`);
-                                files.push(f);
-                            }
-
-                            if (navigator.canShare && navigator.canShare({ files })) {
-                                await navigator.share({ files });
-                                return;
-                            }
-                        }
-
-                        // Fallback if no images attached: share text directly
-                        await navigator.share({
-                            title: rep.title,
-                            text: formattedText
-                        });
-                    } catch (err) {
-                        if (err.name !== 'AbortError' && !autoCopyTextFirst) {
-                            copyFormattedTextToClipboard('คัดลอกข้อความแล้ว! เปิด LINE แล้วกดวาง (Paste) ได้เลย');
-                        }
-                    }
-                } else {
-                    if (!autoCopyTextFirst) {
-                        copyFormattedTextToClipboard('อุปกรณ์นี้ไม่รองรับการแชร์ตรง ระบบคัดลอกข้อความให้แล้ว นำไปวางใน LINE ได้เลย');
-                    }
-                }
-            }
-
-            function markReportAsSent() {
-                const rep = reports.find(r => r.id === activeShareReportId);
-                if (!rep) return;
-
-                rep.status = 'sent';
-                rep.lastSentDate = getTodayDateKey();
-                saveReports();
-                renderReports();
-                updateClockAndTimers();
-                closeShareModal();
-                showToast('อัปเดตสถานะเป็น "ส่งแล้ว" เรียบร้อย 🎉', 'success');
-            }
-
-            // 10. UI FEEDBACK HELPERS (TOAST & CONFIRM MODAL)
-            function showToast(message, type = 'info') {
-                const container = document.getElementById('toastContainer');
-                if (!container) return;
-
-                const colors = {
-                    success: 'bg-emerald-600 text-white',
-                    error: 'bg-red-600 text-white',
-                    warning: 'bg-amber-500 text-white',
-                    info: 'bg-slate-800 text-white'
+                    img.onerror = reject;
+                    img.src = e.target.result;
                 };
-                const icons = {
-                    success: 'check-circle-2',
-                    error: 'alert-circle',
-                    warning: 'alert-triangle',
-                    info: 'info'
-                };
-
-                const toast = document.createElement('div');
-                toast.className = `${colors[type] || colors.info} px-4 py-3 rounded-xl shadow-lg flex items-center space-x-2.5 text-xs sm:text-sm font-medium pointer-events-auto transform transition-all duration-300 translate-y-2 opacity-0 max-w-md`;
-                toast.innerHTML = `<i data-lucide="${icons[type] || 'info'}" class="w-4 h-4 shrink-0"></i><span>${escapeHtml(message)}</span>`;
-
-                container.appendChild(toast);
-                refreshLucideIcons();
-
-                requestAnimationFrame(() => {
-                    toast.classList.remove('translate-y-2', 'opacity-0');
-                });
-
-                setTimeout(() => {
-                    toast.classList.add('opacity-0', 'translate-y-2');
-                    setTimeout(() => toast.remove(), 300);
-                }, 4000);
-            }
-
-            function openConfirmModal(title, message, onConfirm) {
-                document.getElementById('confirmTitle').textContent = title;
-                document.getElementById('confirmMessage').textContent = message;
-                pendingConfirmCallback = onConfirm;
-                document.getElementById('confirmModal').classList.remove('hidden');
-                refreshLucideIcons();
-            }
-
-            function closeConfirmModal() {
-                document.getElementById('confirmModal').classList.add('hidden');
-                pendingConfirmCallback = null;
-            }
-
-            function escapeHtml(str) {
-                const div = document.createElement('div');
-                div.textContent = str;
-                return div.innerHTML;
-            }
-
-            // 11. EVENT LISTENERS INITIALIZATION
-            document.addEventListener('DOMContentLoaded', () => {
-                // Header Controls
-                document.getElementById('testSoundBtn').addEventListener('click', () => {
-                    playBellChime();
-                    showToast('กำลังทดสอบเสียงกระดิ่งแจ้งเตือน', 'info');
-                });
-                document.getElementById('notifPermBtn').addEventListener('click', requestBrowserNotification);
-                document.getElementById('createNewReportBtn').addEventListener('click', () => openFormModal(null));
-                document.getElementById('emptyCreateBtn').addEventListener('click', () => openFormModal(null));
-
-                // Export / Import JSON
-                document.getElementById('exportJsonBtn').addEventListener('click', exportReportsJson);
-                document.getElementById('importJsonBtn').addEventListener('click', () => {
-                    document.getElementById('importJsonInput').click();
-                });
-                document.getElementById('importJsonInput').addEventListener('change', handleImportJsonFile);
-
-                // Filter Tabs Delegation
-                document.getElementById('filterTabsGroup').addEventListener('click', (e) => {
-                    const btn = e.target.closest('[data-filter]');
-                    if (btn) setFilter(btn.dataset.filter);
-                });
-
-                // View Mode Toggle
-                document.getElementById('viewRowBtn').addEventListener('click', () => setViewMode('row'));
-                document.getElementById('viewGridBtn').addEventListener('click', () => setViewMode('grid'));
-
-                // Reports List Actions Delegation
-                document.getElementById('reportsContainer').addEventListener('click', (e) => {
-                    const btn = e.target.closest('[data-action]');
-                    if (!btn) return;
-                    const action = btn.dataset.action;
-                    const id = btn.dataset.id;
-
-                    if (action === 'share') openShareModal(id, false);
-                    else if (action === 'edit') openFormModal(id);
-                    else if (action === 'delete') confirmDeleteReport(id);
-                });
-
-                // Create/Edit Modal Controls
-                document.getElementById('closeFormModalTopBtn').addEventListener('click', closeFormModal);
-                document.getElementById('cancelFormModalBtn').addEventListener('click', closeFormModal);
-                document.getElementById('saveReportBtn').addEventListener('click', saveReportForm);
-                document.getElementById('reportForm').addEventListener('submit', (e) => {
-                    e.preventDefault();
-                    saveReportForm();
-                });
-                document.getElementById('insertDateBtn').addEventListener('click', insertDateToken);
-                document.getElementById('applyTemplateBtn').addEventListener('click', applyStandardLineupTemplate);
-                document.getElementById('imageInput').addEventListener('change', handleImageFilesSelected);
-                document.getElementById('formImagePreviews').addEventListener('click', (e) => {
-                    const rmBtn = e.target.closest('[data-remove-thumb]');
-                    if (rmBtn) {
-                        const idx = parseInt(rmBtn.dataset.removeThumb, 10);
-                        currentFormImages.splice(idx, 1);
-                        renderFormThumbnails();
-                    }
-                });
-
-                // Ready-to-Share Modal Controls
-                document.getElementById('closeShareModalTopBtn').addEventListener('click', closeShareModal);
-                document.getElementById('closeShareModalBottomBtn').addEventListener('click', closeShareModal);
-                document.getElementById('pcCopyTextBtn').addEventListener('click', () => copyFormattedTextToClipboard());
-                document.getElementById('pcCopyImageBtn').addEventListener('click', copyImageForLinePC);
-                document.getElementById('downloadAllImagesBtn').addEventListener('click', downloadAllReportImages);
-                document.getElementById('mobileComboShareBtn').addEventListener('click', () => shareImagesToMobileApp(true));
-                document.getElementById('mobileStep1CopyTextBtn').addEventListener('click', () => copyFormattedTextToClipboard('คัดลอกข้อความแล้ว! เปิด LINE แล้วกดวาง (Paste) ได้เลย'));
-                document.getElementById('mobileStep2ShareImgBtn').addEventListener('click', () => shareImagesToMobileApp(false));
-                document.getElementById('markAsSentBtn').addEventListener('click', markReportAsSent);
-
-                document.getElementById('shareImagesGrid').addEventListener('click', (e) => {
-                    const dlBtn = e.target.closest('[data-dl-single-img]');
-                    if (dlBtn && activeShareReportId) {
-                        const idx = parseInt(dlBtn.dataset.dlSingleImg, 10);
-                        const rep = reports.find(r => r.id === activeShareReportId);
-                        if (rep && rep.images && rep.images[idx]) {
-                            triggerSingleDownload(rep.images[idx], `report_image_${idx + 1}.jpg`);
-                        }
-                    }
-                });
-
-                // Confirmation Modal Controls
-                document.getElementById('cancelConfirmBtn').addEventListener('click', closeConfirmModal);
-                document.getElementById('confirmActionBtn').addEventListener('click', () => {
-                    const cb = pendingConfirmCallback;
-                    closeConfirmModal();
-                    if (typeof cb === 'function') cb();
-                });
-
-                // Boot Application
-                loadReports();
-                updateNotifButtonState();
-                renderReports();
-                updateClockAndTimers();
-                refreshLucideIcons();
-                setInterval(updateClockAndTimers, 1000);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
             });
-        })();
+        }
+
+        // --- 4. WEB AUDIO & NOTIFICATION ENGINE ---
+        function testNotificationSound() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
+                osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.15); // A5
+                gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.6);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.6);
+            } catch (e) {
+                console.log('Audio Context error:', e);
+            }
+        }
+
+        // --- 5. SCHEDULER & COUNTDOWN ENGINE ---
+        function initSystemClock() {
+            setInterval(() => {
+                const now = new Date();
+                const timeString = now.toTimeString().split(' ')[0];
+                const dateString = `${getThaiDayOfWeek(now)} ที่ ${getThaiDateString(now)}`;
+                
+                const timeEl = document.getElementById('current-time-display');
+                const dateEl = document.getElementById('current-date-display');
+                if (timeEl) timeEl.textContent = timeString;
+                if (dateEl) dateEl.textContent = dateString;
+
+                checkScheduledReports(now);
+                updateCountdownDisplay(now);
+            }, 1000);
+        }
+
+        let alertedReportsToday = new Set();
+        function checkScheduledReports(now) {
+            const currentTimeStr = now.toTimeString().substring(0, 5); // "HH:MM"
+            const currentDayOfWeek = now.getDay().toString(); // "0" - "6"
+            const todayDateStr = now.toISOString().split('T')[0]; // "YYYY-MM-DD"
+
+            reports.forEach(report => {
+                if (!report.active) return;
+
+                // Check time match
+                if (report.time === currentTimeStr) {
+                    // Check day of week if specified
+                    if (report.days && report.days.length > 0) {
+                        if (!report.days.includes(currentDayOfWeek)) return;
+                    }
+
+                    // Check date range if specified
+                    if (report.startDate && todayDateStr < report.startDate) return;
+                    if (report.endDate && todayDateStr > report.endDate) return;
+
+                    // Prevent multiple alerts in the same minute
+                    const alertKey = `${report.id}_${todayDateStr}_${currentTimeStr}`;
+                    if (!alertedReportsToday.has(alertKey)) {
+                        alertedReportsToday.add(alertKey);
+                        triggerReportAlert(report);
+                    }
+                }
+            });
+        }
+
+        function triggerReportAlert(report) {
+            testNotificationSound();
+            // Open share modal automatically when due
+            openShareModal(report.id);
+        }
+
+        function updateCountdownDisplay(now) {
+            const activeReports = reports.filter(r => r.active && r.time);
+            if (activeReports.length === 0) {
+                const titleEl = document.getElementById('next-report-title');
+                const descEl = document.getElementById('next-report-desc');
+                const badgeEl = document.getElementById('next-report-time-badge');
+                const timerEl = document.getElementById('countdown-timer');
+                if (titleEl) titleEl.textContent = 'ไม่มีรายงานที่ตั้งเวลาเปิดใช้งาน';
+                if (descEl) descEl.textContent = 'สร้างหรือเปิดใช้งานรายงานเพื่อเริ่มนับถอยหลัง';
+                if (badgeEl) badgeEl.textContent = '--:--';
+                if (timerEl) timerEl.textContent = '--:--:--';
+                return;
+            }
+
+            // Find next upcoming report today or soonest
+            const currentTimeMin = now.getHours() * 60 + now.getMinutes();
+            let closestReport = null;
+            let minDiff = Infinity;
+
+            activeReports.forEach(r => {
+                const [h, m] = r.time.split(':').map(Number);
+                const reportTimeMin = h * 60 + m;
+                let diff = reportTimeMin - currentTimeMin;
+                if (diff < 0) diff += 24 * 60; // Next day
+
+                if (diff < minDiff) {
+                    minDiff = diff;
+                    closestReport = r;
+                }
+            });
+
+            if (closestReport) {
+                const titleEl = document.getElementById('next-report-title');
+                const descEl = document.getElementById('next-report-desc');
+                const badgeEl = document.getElementById('next-report-time-badge');
+                const timerEl = document.getElementById('countdown-timer');
+
+                if (titleEl) titleEl.textContent = closestReport.title;
+                if (descEl) descEl.textContent = `กำหนดส่งเวลา ${closestReport.time} น.`;
+                if (badgeEl) badgeEl.textContent = closestReport.time + ' น.';
+
+                // Calculate countdown time remaining
+                const [h, m] = closestReport.time.split(':').map(Number);
+                const targetDate = new Date(now);
+                targetDate.setHours(h, m, 0, 0);
+                if (targetDate <= now) {
+                    targetDate.setDate(targetDate.getDate() + 1);
+                }
+
+                const diffSec = Math.floor((targetDate - now) / 1000);
+                const hrs = Math.floor(diffSec / 3600);
+                const mins = Math.floor((diffSec % 3600) / 60);
+                const secs = diffSec % 60;
+
+                if (timerEl) {
+                    timerEl.textContent = `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+                }
+            }
+        }
+
+        // --- 6. STORAGE & LOAD FUNCTIONS ---
+        function loadAllData() {
+            try {
+                const savedReports = localStorage.getItem(STORAGE_KEYS.REPORTS);
+                reports = savedReports ? JSON.parse(savedReports) : [];
+
+                const savedTemplates = localStorage.getItem(STORAGE_KEYS.TEMPLATES);
+                templates = savedTemplates ? JSON.parse(savedTemplates) : DEFAULT_TEMPLATES;
+
+                const savedPolice = localStorage.getItem(STORAGE_KEYS.POLICE_SNIPPETS);
+                policeSnippets = savedPolice ? JSON.parse(savedPolice) : DEFAULT_POLICE_SNIPPETS;
+
+                const savedLocations = localStorage.getItem(STORAGE_KEYS.LOCATIONS);
+                locationSnippets = savedLocations ? JSON.parse(savedLocations) : DEFAULT_LOCATIONS;
+            } catch (e) {
+                console.error('Error loading data from localStorage:', e);
+                reports = [];
+                templates = DEFAULT_TEMPLATES;
+                policeSnippets = DEFAULT_POLICE_SNIPPETS;
+                locationSnippets = DEFAULT_LOCATIONS;
+            }
+            renderAll();
+        }
+
+        function persistData() {
+            try {
+                localStorage.setItem(STORAGE_KEYS.REPORTS, JSON.stringify(reports));
+                localStorage.setItem(STORAGE_KEYS.TEMPLATES, JSON.stringify(templates));
+                localStorage.setItem(STORAGE_KEYS.POLICE_SNIPPETS, JSON.stringify(policeSnippets));
+                localStorage.setItem(STORAGE_KEYS.LOCATIONS, JSON.stringify(locationSnippets));
+            } catch (e) {
+                alert('พื้นที่จัดเก็บในเบราว์เซอร์เต็ม (LocalStorage Full)! กรุณาลดขนาดหรือจำนวนรูปภาพ');
+            }
+            renderAll();
+        }
+
+        function exportDataJSON() {
+            const data = { reports, templates, policeSnippets, locationSnippets };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `lamplaimat_report_backup_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function importDataJSON(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (data.reports) reports = data.reports;
+                    if (data.templates) templates = data.templates;
+                    if (data.policeSnippets) policeSnippets = data.policeSnippets;
+                    if (data.locationSnippets) locationSnippets = data.locationSnippets;
+                    persistData();
+                    alert('นำเข้าข้อมูลสำเร็จเรียบร้อยแล้ว!');
+                } catch (err) {
+                    alert('ไฟล์ JSON ไม่ถูกต้องหรือไม่สมบูรณ์');
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        // --- 7. UI RENDERING FUNCTIONS ---
+        function renderAll() {
+            renderReportsList();
+            renderStats();
+            renderModalTemplatesBar();
+            renderModalSnippetsAndLocations();
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        }
+
+        function renderStats() {
+            const total = reports.length;
+            const active = reports.filter(r => r.active).length;
+            const totalEl = document.getElementById('stat-total-reports');
+            const activeEl = document.getElementById('stat-active-reports');
+            if (totalEl) totalEl.textContent = total;
+            if (activeEl) activeEl.textContent = active;
+        }
+
+        function setFilterStatus(status) {
+            currentFilter = status;
+            ['all', 'active', 'due', 'inactive'].forEach(s => {
+                const btn = document.getElementById(`filter-btn-${s}`);
+                if (btn) {
+                    if (s === status) {
+                        btn.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white transition-all whitespace-nowrap shadow-sm';
+                    } else {
+                        btn.className = 'px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 transition-all whitespace-nowrap';
+                    }
+                }
+            });
+            renderReportsList();
+        }
+
+        function handleSearch(query) {
+            currentSearchQuery = query.toLowerCase().trim();
+            renderReportsList();
+        }
+
+        function setViewMode(mode) {
+            currentViewMode = mode;
+            const rowBtn = document.getElementById('view-mode-row');
+            const gridBtn = document.getElementById('view-mode-grid');
+            if (rowBtn && gridBtn) {
+                if (mode === 'row') {
+                    rowBtn.className = 'p-1.5 rounded-md text-slate-700 bg-white shadow-sm transition-all';
+                    gridBtn.className = 'p-1.5 rounded-md text-slate-500 hover:text-slate-800 transition-all';
+                } else {
+                    gridBtn.className = 'p-1.5 rounded-md text-slate-700 bg-white shadow-sm transition-all';
+                    rowBtn.className = 'p-1.5 rounded-md text-slate-500 hover:text-slate-800 transition-all';
+                }
+            }
+            renderReportsList();
+        }
+
+        function renderReportsList() {
+            const container = document.getElementById('reports-container');
+            const emptyState = document.getElementById('empty-state');
+            if (!container) return;
+
+            let filtered = reports.filter(r => {
+                // Search query match
+                if (currentSearchQuery) {
+                    const matchTitle = r.title.toLowerCase().includes(currentSearchQuery);
+                    const matchMsg = r.message.toLowerCase().includes(currentSearchQuery);
+                    if (!matchTitle && !matchMsg) return false;
+                }
+                // Status filter match
+                if (currentFilter === 'active') return r.active;
+                if (currentFilter === 'inactive') return !r.active;
+                if (currentFilter === 'due') {
+                    // Check if due today or past time today
+                    return r.active;
+                }
+                return true;
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = '';
+                if (emptyState) emptyState.classList.remove('hidden');
+                return;
+            }
+
+            if (emptyState) emptyState.classList.add('hidden');
+
+            if (currentViewMode === 'row') {
+                container.className = 'space-y-3';
+                container.innerHTML = filtered.map(r => {
+                    const previewText = processReportVariables(r.message, r.time, r.startDate, r.endDate);
+                    const imagesCount = r.images ? r.images.length : 0;
+                    const firstImage = imagesCount > 0 ? r.images[0] : null;
+                    const statusClass = r.active ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-500 border-slate-200';
+                    const statusText = r.active ? 'เปิดใช้งาน' : 'ปิดใช้งาน';
+
+                    return `
+                        <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 hover:border-blue-300 transition-all">
+                            <div class="flex items-start space-x-3.5 flex-1 min-w-0">
+                                <div class="bg-blue-50 text-blue-700 p-3 rounded-xl font-mono font-bold text-sm shrink-0 text-center min-w-[75px]">
+                                    <div>${r.time}</div>
+                                    <div class="text-[10px] text-slate-600 font-normal mt-0.5">น.</div>
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <div class="flex items-center space-x-2">
+                                        <h4 class="text-sm font-bold text-slate-900 truncate">${escapeHtml(r.title)}</h4>
+                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold border ${statusClass}">${statusText}</span>
+                                    </div>
+                                    <p class="text-xs text-slate-500 line-clamp-1 mt-1 font-mono">${escapeHtml(previewText)}</p>
+                                    <div class="flex items-center space-x-3 mt-2 text-[11px] text-slate-600">
+                                        <span><i data-lucide="image" class="w-3.5 h-3.5 inline mr-1 text-slate-400"></i>${imagesCount} รูปภาพ</span>
+                                        ${r.startDate ? `<span><i data-lucide="calendar" class="w-3.5 h-3.5 inline mr-1 text-slate-400"></i>${r.startDate} ถึง ${r.endDate || 'ไม่จำกัด'}</span>` : ''}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center space-x-2 w-full md:w-auto justify-end pt-3 md:pt-0 border-t md:border-t-0 border-slate-100">
+                                <button onclick="openShareModal('${r.id}')" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center space-x-1 shadow-2xs transition-all">
+                                    <i data-lucide="share-2" class="w-3.5 h-3.5"></i>
+                                    <span>แชร์ / ส่ง</span>
+                                </button>
+                                <button onclick="quickCopyText('${r.id}')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 p-1.5 rounded-xl text-xs font-medium transition-colors" title="คัดลอกข้อความด่วน">
+                                    <i data-lucide="copy" class="w-4 h-4"></i>
+                                </button>
+                                <button onclick="openReportModal('${r.id}')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 p-1.5 rounded-xl text-xs font-medium transition-colors" title="แก้ไขรายงาน">
+                                    <i data-lucide="edit-3" class="w-4 h-4"></i>
+                                </button>
+                                <button onclick="deleteReport('${r.id}')" class="bg-rose-50 hover:bg-rose-100 text-rose-600 p-1.5 rounded-xl text-xs font-medium transition-colors" title="ลบรายงาน">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                container.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4';
+                container.innerHTML = filtered.map(r => {
+                    const previewText = processReportVariables(r.message, r.time, r.startDate, r.endDate);
+                    const imagesCount = r.images ? r.images.length : 0;
+                    const statusClass = r.active ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-500 border-slate-200';
+                    const statusText = r.active ? 'เปิดใช้งาน' : 'ปิดใช้งาน';
+
+                    return `
+                        bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between hover:border-blue-300 transition-all
+                        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between hover:border-blue-300 transition-all">
+                            <div>
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold border ${statusClass}">${statusText}</span>
+                                    <span class="text-xs font-mono font-bold bg-blue-50 text-blue-700 px-2 py-0.5 rounded">${r.time} น.</span>
+                                </div>
+                                <h4 class="text-sm font-bold text-slate-900 truncate mb-1">${escapeHtml(r.title)}</h4>
+                                <p class="text-xs text-slate-500 line-clamp-3 font-mono bg-slate-50 p-2.5 rounded-xl border border-slate-100">${escapeHtml(previewText)}</p>
+                                <div class="flex items-center space-x-2 mt-3 text-[11px] text-slate-600">
+                                    <i data-lucide="image" class="w-3.5 h-3.5 text-slate-400"></i>
+                                    <span>${imagesCount} รูปภาพประกอบ</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between pt-3 mt-4 border-t border-slate-100">
+                                <div class="flex items-center space-x-1">
+                                    <button onclick="quickCopyText('${r.id}')" class="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg" title="คัดลอกข้อความด่วน"><i data-lucide="copy" class="w-3.5 h-3.5"></i></button>
+                                    <button onclick="openReportModal('${r.id}')" class="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg" title="แก้ไข"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i></button>
+                                    <button onclick="deleteReport('${r.id}')" class="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg" title="ลบ"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                                </div>
+                                <button onclick="openShareModal('${r.id}')" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center space-x-1 shadow-2xs">
+                                    <i data-lucide="share-2" class="w-3.5 h-3.5"></i>
+                                    <span>แชร์ / ส่ง</span>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        // --- 8. MODAL CONTROLLERS & FORM ACTIONS ---
+        function openReportModal(reportId = null) {
+            const modal = document.getElementById('report-modal');
+            const titleEl = document.getElementById('report-modal-title');
+            if (!modal) return;
+
+            currentEditingImages = [];
+            document.getElementById('report-id').value = '';
+            document.getElementById('report-title').value = '';
+            document.getElementById('report-time').value = '20:00';
+            document.getElementById('report-active').checked = true;
+            document.getElementById('report-start-date').value = '';
+            document.getElementById('report-end-date').value = '';
+            document.getElementById('report-message').value = '';
+            
+            // Uncheck all days by default
+            document.querySelectorAll('input[name="report-days"]').forEach(cb => cb.checked = false);
+
+            if (reportId) {
+                titleEl.textContent = 'แก้ไขรายงาน';
+                const report = reports.find(r => r.id === reportId);
+                if (report) {
+                    document.getElementById('report-id').value = report.id;
+                    document.getElementById('report-title').value = report.title || '';
+                    document.getElementById('report-time').value = report.time || '20:00';
+                    document.getElementById('report-active').checked = report.active !== false;
+                    document.getElementById('report-start-date').value = report.startDate || '';
+                    document.getElementById('report-end-date').value = report.endDate || '';
+                    document.getElementById('report-message').value = report.message || '';
+                    currentEditingImages = report.images ? [...report.images] : [];
+
+                    if (report.days) {
+                        document.querySelectorAll('input[name="report-days"]').forEach(cb => {
+                            if (report.days.includes(cb.value)) cb.checked = true;
+                        });
+                    }
+                }
+            } else {
+                titleEl.textContent = 'สร้างรายงานใหม่';
+            }
+
+            renderImagePreviews();
+            renderModalTemplatesBar();
+            renderModalSnippetsAndLocations();
+            modal.classList.remove('hidden');
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
+        function closeReportModal() {
+            const modal = document.getElementById('report-modal');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        function selectAllDays(checked) {
+            document.querySelectorAll('input[name="report-days"]').forEach(cb => cb.checked = checked);
+        }
+
+        function selectWeekdayDays() {
+            document.querySelectorAll('input[name="report-days"]').forEach(cb => {
+                const val = cb.value;
+                // 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri
+                cb.checked = ['1', '2', '3', '4', '5'].includes(val);
+            });
+        }
+
+        function insertVariable(variableText) {
+            const textarea = document.getElementById('report-message');
+            if (!textarea) return;
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const val = textarea.value;
+            textarea.value = val.substring(0, start) + variableText + val.substring(end);
+            textarea.selectionStart = textarea.selectionEnd = start + variableText.length;
+            textarea.focus();
+        }
+
+        function insertTemplateToForm(templateId) {
+            const tmpl = templates.find(t => t.id === templateId);
+            if (!tmpl) return;
+            const textarea = document.getElementById('report-message');
+            if (!textarea) return;
+            textarea.value = tmpl.content;
+            textarea.focus();
+        }
+
+        function insertSnippetToForm(textToInsert) {
+            insertVariable(textToInsert);
+        }
+
+        async function handleImageUpload(event) {
+            const files = event.target.files;
+            if (!files || files.length === 0) return;
+
+            for (let i = 0; i < files.length; i++) {
+                try {
+                    const compressedDataUrl = await compressImage(files[i], 1000, 0.75);
+                    currentEditingImages.push(compressedDataUrl);
+                } catch (err) {
+                    console.error('Image compression failed:', err);
+                }
+            }
+            renderImagePreviews();
+            event.target.value = '';
+        }
+
+        function removeEditingImage(index) {
+            currentEditingImages.splice(index, 1);
+            renderImagePreviews();
+        }
+
+        function renderImagePreviews() {
+            const container = document.getElementById('image-preview-container');
+            if (!container) return;
+
+            if (currentEditingImages.length === 0) {
+                container.innerHTML = '<p class="text-xs text-slate-400 col-span-full italic">ยังไม่ได้เลือกรูปภาพประกอบ</p>';
+                return;
+            }
+
+            container.innerHTML = currentEditingImages.map((imgSrc, idx) => `
+                <div class="relative group bg-slate-100 rounded-xl overflow-hidden border border-slate-200 aspect-square">
+                    <img src="${imgSrc}" class="w-full h-full object-cover">
+                    <button type="button" onclick="removeEditingImage(${idx})" class="absolute top-1 right-1 bg-rose-600 hover:bg-rose-700 text-white p-1 rounded-full shadow-md opacity-90 group-hover:opacity-100 transition-opacity">
+                        <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                    </button>
+                </div>
+            `).join('');
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
+        function renderModalTemplatesBar() {
+            const bar = document.getElementById('modal-templates-bar');
+            if (!bar) return;
+            bar.innerHTML = `
+                <span class="text-[11px] font-bold text-amber-800 self-center mr-1">เทมเพลต:</span>
+                ${templates.map(t => `
+                    <button type="button" onclick="insertTemplateToForm('${t.id}')" class="px-2 py-1 bg-white hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-lg text-[11px] font-medium shadow-2xs transition-all">
+                        ${escapeHtml(t.name)}
+                    </button>
+                `).join('')}
+            `;
+        }
+
+        function renderModalSnippetsAndLocations() {
+            const locBar = document.getElementById('modal-locations-bar');
+            const snipBar = document.getElementById('modal-snippets-bar');
+
+            if (locBar) {
+                locBar.innerHTML = locationSnippets.map((l, idx) => `
+                    <button type="button" onclick="insertSnippetToForm('{loc${idx+1}}')" class="px-2 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-lg text-[11px] font-medium transition-all" title="แทรก ${l.name}">
+                        📍 ${escapeHtml(l.name)}
+                    </button>
+                `).join('');
+            }
+
+            if (snipBar) {
+                snipBar.innerHTML = policeSnippets.map((p, idx) => `
+                    <button type="button" onclick="insertSnippetToForm('{p${idx+1}} {pos${idx+1}}')" class="px-2 py-1 bg-white hover:bg-blue-50 text-slate-700 border border-slate-200 rounded-lg text-[11px] font-medium transition-all text-left" title="แทรก ${p.name} (${p.position})">
+                        👮‍♂️ ${escapeHtml(p.name)} (${escapeHtml(p.position)})
+                    </button>
+                `).join('');
+            }
+        }
+
+        function saveReport() {
+            const id = document.getElementById('report-id').value || 'rep_' + Date.now();
+            const title = document.getElementById('report-title').value.trim();
+            const time = document.getElementById('report-time').value;
+            const active = document.getElementById('report-active').checked;
+            const startDate = document.getElementById('report-start-date').value;
+            const endDate = document.getElementById('report-end-date').value;
+            const message = document.getElementById('report-message').value.trim();
+
+            if (!title) {
+                alert('กรุณากรอกหัวข้อรายงาน');
+                document.getElementById('report-title').focus();
+                return;
+            }
+            if (!time) {
+                alert('กรุณากำหนดเวลาส่งรายงาน');
+                document.getElementById('report-time').focus();
+                return;
+            }
+            if (!message) {
+                alert('กรุณากรอกข้อความรายงาน');
+                document.getElementById('report-message').focus();
+                return;
+            }
+
+            const days = [];
+            document.querySelectorAll('input[name="report-days"]:checked').forEach(cb => {
+                days.push(cb.value);
+            });
+
+            const reportData = {
+                id,
+                title,
+                time,
+                active,
+                startDate,
+                endDate,
+                days,
+                message,
+                images: [...currentEditingImages]
+            };
+
+            const existingIdx = reports.findIndex(r => r.id === id);
+            if (existingIdx >= 0) {
+                reports[existingIdx] = reportData;
+            } else {
+                reports.push(reportData);
+            }
+
+            persistData();
+            closeReportModal();
+        }
+
+        function deleteReport(reportId) {
+            if (confirm('คุณต้องการลบรายงานนี้ใช่หรือไม่?')) {
+                reports = reports.filter(r => r.id !== reportId);
+                persistData();
+            }
+        }
+
+        function quickCopyText(reportId) {
+            const r = reports.find(x => x.id === reportId);
+            if (!r) return;
+            const textToCopy = processReportVariables(r.message, r.time, r.startDate, r.endDate);
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                alert('คัดลอกข้อความรายงานลงในคลิปบอร์ดแล้ว!');
+            }).catch(err => {
+                alert('ไม่สามารถคัดลอกข้อความได้ กรุณาลองใหม่อีกครั้ง');
+            });
+        }
+
+        // --- 9. TEMPLATE MANAGER MODAL ---
+        function openTemplateManager() {
+            const modal = document.getElementById('template-modal');
+            if (modal) {
+                resetTemplateForm();
+                renderTemplatesList();
+                modal.classList.remove('hidden');
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+            }
+        }
+
+        function closeTemplateManager() {
+            const modal = document.getElementById('template-modal');
+            if (modal) modal.classList.add('hidden');
+            renderModalTemplatesBar();
+        }
+
+        function resetTemplateForm() {
+            document.getElementById('editing-template-id').value = '';
+            document.getElementById('new-template-name').value = '';
+            document.getElementById('new-template-content').value = '';
+            document.getElementById('cancel-template-edit').classList.add('hidden');
+        }
+
+        function saveTemplate() {
+            const id = document.getElementById('editing-template-id').value || 'tmpl_' + Date.now();
+            const name = document.getElementById('new-template-name').value.trim();
+            const content = document.getElementById('new-template-content').value.trim();
+
+            if (!name || !content) {
+                alert('กรุณากรอกชื่อและเนื้อหาเทมเพลตให้ครบถ้วน');
+                return;
+            }
+
+            const existingIdx = templates.findIndex(t => t.id === id);
+            if (existingIdx >= 0) {
+                templates[existingIdx] = { id, name, content };
+            } else {
+                templates.push({ id, name, content });
+            }
+
+            persistData();
+            resetTemplateForm();
+            renderTemplatesList();
+        }
+
+        function editTemplate(id) {
+            const tmpl = templates.find(t => t.id === id);
+            if (!tmpl) return;
+            document.getElementById('editing-template-id').value = tmpl.id;
+            document.getElementById('new-template-name').value = tmpl.name;
+            document.getElementById('new-template-content').value = tmpl.content;
+            document.getElementById('cancel-template-edit').classList.remove('hidden');
+            document.getElementById('new-template-name').focus();
+        }
+
+        function deleteTemplate(id) {
+            if (confirm('คุณต้องการลบเทมเพลตนี้ใช่หรือไม่?')) {
+                templates = templates.filter(t => t.id !== id);
+                persistData();
+                renderTemplatesList();
+            }
+        }
+
+        function renderTemplatesList() {
+            const container = document.getElementById('templates-list-container');
+            if (!container) return;
+
+            if (templates.length === 0) {
+                container.innerHTML = '<p class="text-xs text-slate-400 italic">ยังไม่มีเทมเพลตในระบบ</p>';
+                return;
+            }
+
+            container.innerHTML = templates.map(t => `
+                <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 flex items-start justify-between gap-3">
+                    <div class="min-w-0 flex-1">
+                        <h5 class="text-xs font-bold text-slate-900">${escapeHtml(t.name)}</h5>
+                        <p class="text-[11px] text-slate-500 line-clamp-2 font-mono mt-0.5">${escapeHtml(t.content)}</p>
+                    </div>
+                    <div class="flex items-center space-x-1 shrink-0">
+                        <button onclick="editTemplate('${t.id}')" class="p-1.5 bg-white hover:bg-slate-200 text-slate-700 rounded-lg border border-slate-200" title="แก้ไข"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i></button>
+                        <button onclick="deleteTemplate('${t.id}')" class="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg" title="ลบ"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                    </div>
+                </div>
+            `).join('');
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
+        // --- 10. SNIPPET & LOCATION MANAGER MODAL ---
+        function openSnippetManager() {
+            const modal = document.getElementById('snippet-modal');
+            if (modal) {
+                switchSnippetTab('police');
+                modal.classList.remove('hidden');
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+            }
+        }
+
+        function closeSnippetManager() {
+            const modal = document.getElementById('snippet-modal');
+            if (modal) modal.classList.add('hidden');
+            renderModalSnippetsAndLocations();
+        }
+
+        function switchSnippetTab(tabType) {
+            document.getElementById('editing-snippet-type').value = tabType;
+            const tabPolice = document.getElementById('snippet-tab-police');
+            const tabLocation = document.getElementById('snippet-tab-location');
+            const policeFields = document.getElementById('police-input-fields');
+            const locationFields = document.getElementById('location-input-fields');
+            const formTitle = document.getElementById('snippet-form-title');
+            const listTitle = document.getElementById('snippet-list-title');
+
+            resetSnippetForm();
+
+            if (tabType === 'police') {
+                tabPolice.className = 'px-4 py-2 text-xs font-bold border-b-2 border-emerald-600 text-emerald-700';
+                tabLocation.className = 'px-4 py-2 text-xs font-semibold text-slate-500 hover:text-slate-800';
+                policeFields.classList.remove('hidden');
+                locationFields.classList.add('hidden');
+                formTitle.textContent = 'เพิ่มรายชื่อนายตำรวจใหม่';
+                listTitle.textContent = 'รายชื่อนายตำรวจทั้งหมด';
+                renderSnippetsList('police');
+            } else {
+                tabLocation.className = 'px-4 py-2 text-xs font-bold border-b-2 border-emerald-600 text-emerald-700';
+                tabPolice.className = 'px-4 py-2 text-xs font-semibold text-slate-500 hover:text-slate-800';
+                locationFields.classList.remove('hidden');
+                policeFields.classList.add('hidden');
+                formTitle.textContent = 'เพิ่มสถานที่ปฏิบัติงานใหม่';
+                listTitle.textContent = 'สถานที่ปฏิบัติงานทั้งหมด';
+                renderSnippetsList('location');
+            }
+        }
+
+        function resetSnippetForm() {
+            document.getElementById('editing-snippet-id').value = '';
+            document.getElementById('snippet-name').value = '';
+            document.getElementById('snippet-position').value = '';
+            document.getElementById('snippet-location-name').value = '';
+            document.getElementById('cancel-snippet-edit').classList.add('hidden');
+        }
+
+        function saveSnippet() {
+            const type = document.getElementById('editing-snippet-type').value;
+            const id = document.getElementById('editing-snippet-id.value') || document.getElementById('editing-snippet-id').value || (type + '_' + Date.now());
+
+            if (type === 'police') {
+                const name = document.getElementById('snippet-name').value.trim();
+                const position = document.getElementById('snippet-position').value.trim();
+                if (!name || !position) {
+                    alert('กรุณากรอกยศ-ชื่อ และตำแหน่งให้ครบถ้วน');
+                    return;
+                }
+
+                const existingIdx = policeSnippets.findIndex(p => p.id === id);
+                if (existingIdx >= 0) {
+                    policeSnippets[existingIdx] = { id, name, position };
+                } else {
+                    policeSnippets.push({ id, name, position });
+                }
+            } else {
+                const name = document.getElementById('snippet-location-name').value.trim();
+                if (!name) {
+                    alert('กรุณากรอกชื่อสถานที่');
+                    return;
+                }
+
+                const existingIdx = locationSnippets.findIndex(l => l.id === id);
+                if (existingIdx >= 0) {
+                    locationSnippets[existingIdx] = { id, name };
+                } else {
+                    locationSnippets.push({ id, name });
+                }
+            }
+
+            persistData();
+            resetSnippetForm();
+            renderSnippetsList(type);
+        }
+
+        function editSnippet(type, id) {
+            document.getElementById('editing-snippet-type').value = type;
+            document.getElementById('editing-snippet-id').value = id;
+            document.getElementById('cancel-snippet-edit').classList.remove('hidden');
+
+            if (type === 'police') {
+                const p = policeSnippets.find(x => x.id === id);
+                if (!p) return;
+                document.getElementById('snippet-name').value = p.name;
+                document.getElementById('snippet-position').value = p.position;
+                document.getElementById('snippet-name').focus();
+            } else {
+                const l = locationSnippets.find(x => x.id === id);
+                if (!l) return;
+                document.getElementById('snippet-location-name').value = l.name;
+                document.getElementById('snippet-location-name').focus();
+            }
+        }
+
+        function deleteSnippet(type, id) {
+            if (confirm('คุณต้องการลบรายการนี้ใช่หรือไม่?')) {
+                if (type === 'police') {
+                    policeSnippets = policeSnippets.filter(p => p.id !== id);
+                } else {
+                    locationSnippets = locationSnippets.filter(l => l.id !== id);
+                }
+                persistData();
+                renderSnippetsList(type);
+            }
+        }
+
+        function renderSnippetsList(type) {
+            const container = document.getElementById('snippets-list-container');
+            if (!container) return;
+
+            if (type === 'police') {
+                if (policeSnippets.length === 0) {
+                    container.innerHTML = '<p class="text-xs text-slate-400 italic">ยังไม่มีรายชื่อนายตำรวจในระบบ</p>';
+                    return;
+                }
+                container.innerHTML = policeSnippets.map((p, idx) => `
+                    <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 flex items-center justify-between gap-3">
+                        <div>
+                            <span class="text-[10px] font-mono bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded mr-2">{p${idx+1}} / {pos${idx+1}}</span>
+                            <span class="text-xs font-bold text-slate-900">${escapeHtml(p.name)}</span>
+                            <span class="text-xs text-slate-500 ml-2">(${escapeHtml(p.position)})</span>
+                        </div>
+                        <div class="flex items-center space-x-1 shrink-0">
+                            <button onclick="editSnippet('police', '${p.id}')" class="p-1.5 bg-white hover:bg-slate-200 text-slate-700 rounded-lg border border-slate-200" title="แก้ไข"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i></button>
+                            <button onclick="deleteSnippet('police', '${p.id}')" class="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg" title="ลบ"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                if (locationSnippets.length === 0) {
+                    container.innerHTML = '<p class="text-xs text-slate-400 italic">ยังไม่มีสถานที่ในระบบ</p>';
+                    return;
+                }
+                container.innerHTML = locationSnippets.map((l, idx) => `
+                    <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 flex items-center justify-between gap-3">
+                        <div>
+                            <span class="text-[10px] font-mono bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded mr-2">{loc${idx+1}}</span>
+                            <span class="text-xs font-bold text-slate-900">${escapeHtml(l.name)}</span>
+                        </div>
+                        <div class="flex items-center space-x-1 shrink-0">
+                            <button onclick="editSnippet('location', '${l.id}')" class="p-1.5 bg-white hover:bg-slate-200 text-slate-700 rounded-lg border border-slate-200" title="แก้ไข"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i></button>
+                            <button onclick="deleteSnippet('location', '${l.id}')" class="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg" title="ลบ"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
+        function resetDefaultSnippetsAndLocations() {
+            if (confirm('คุณต้องการรีเซ็ตรายชื่อนายตำรวจและสถานที่กลับเป็นค่าเริ่มต้นทั้งหมดใช่หรือไม่?')) {
+                policeSnippets = [...DEFAULT_POLICE_SNIPPETS];
+                locationSnippets = [...DEFAULT_LOCATIONS];
+                persistData();
+                renderSnippetsList(document.getElementById('editing-snippet-type').value);
+            }
+        }
+
+        // --- 11. SHARE & CLIPBOARD ACTIONS ---
+        function openShareModal(reportId) {
+            const report = reports.find(r => r.id === reportId);
+            if (!report) return;
+
+            activeShareData = report;
+            const processedText = processReportVariables(report.message, report.time, report.startDate, report.endDate);
+
+            const textBox = document.getElementById('share-text-box');
+            if (textBox) textBox.value = processedText;
+
+            const countEl = document.getElementById('share-image-count');
+            const images = report.images || [];
+            if (countEl) countEl.textContent = images.length;
+
+            const imgContainer = document.getElementById('share-images-preview-container');
+            if (imgContainer) {
+                if (images.length === 0) {
+                    imgContainer.innerHTML = '<p class="text-xs text-slate-400 italic col-span-2 p-2">ไม่มีรูปภาพประกอบ</p>';
+                } else {
+                    imgContainer.innerHTML = images.map((imgSrc, idx) => `
+                        <div class="relative bg-slate-100 rounded-lg overflow-hidden border border-slate-200 aspect-square">
+                            <img src="${imgSrc}" class="w-full h-full object-cover">
+                        </div>
+                    `).join('');
+                }
+            }
+
+            const modal = document.getElementById('share-modal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+            }
+        }
+
+        function closeShareModal() {
+            const modal = document.getElementById('share-modal');
+            if (modal) modal.classList.add('hidden');
+            activeShareData = null;
+        }
+
+        function copyReportTextOnly() {
+            const textBox = document.getElementById('share-text-box');
+            if (!textBox) return;
+            navigator.clipboard.writeText(textBox.value).then(() => {
+                const statusEl = document.getElementById('copy-text-status');
+                if (statusEl) {
+                    statusEl.classList.remove('hidden');
+                    setTimeout(() => statusEl.classList.add('hidden'), 2000);
+                }
+                alert('คัดลอกข้อความรายงานลงในคลิปบอร์ดแล้ว!');
+            }).catch(() => {
+                alert('ไม่สามารถคัดลอกข้อความได้');
+            });
+        }
+
+        async function copyTextAndShareImagesMobile() {
+            if (!activeShareData) return;
+            const processedText = processReportVariables(activeShareData.message, activeShareData.time, activeShareData.startDate, activeShareData.endDate);
+
+            try {
+                // Step 1: Copy text to clipboard
+                await navigator.clipboard.writeText(processedText);
+                alert('ขั้นตอนที่ 1: คัดลอกข้อความลงคลิปบอร์ดเรียบร้อยแล้ว!\nระบบจะเปิดหน้าต่างแชร์รูปภาพ ให้เลือกส่งเข้า LINE จากนั้นแตะช่องพิมพ์แล้วกด "วาง (Paste)" ข้อความได้เลย');
+
+                // Step 2: Share images if available
+                const images = activeShareData.images || [];
+                if (images.length > 0 && navigator.share) {
+                    // Convert dataURLs to Files
+                    const filesArray = [];
+                    for (let i = 0; i < images.length; i++) {
+                        const res = await fetch(images[i]);
+                        const blob = await res.blob();
+                        filesArray.push(new File([blob], `report_image_${i+1}.jpg`, { type: 'image/jpeg' }));
+                    }
+
+                    if (navigator.canShare && navigator.canShare({ files: filesArray })) {
+                        await navigator.share({
+                            title: activeShareData.title,
+                            text: processedText,
+                            files: filesArray
+                        });
+                        return;
+                    }
+                }
+            } catch (err) {
+                console.log('Mobile share fallback:', err);
+            }
+        }
+
+        async function copyAllImagesToClipboard() {
+            if (!activeShareData || !activeShareData.images || activeShareData.images.length === 0) {
+                alert('ไม่มีรูปภาพให้คัดลอก');
+                return;
+            }
+            alert('คำแนะนำ: บนเบราว์เซอร์เดสก์ท็อป สามารถคลิกดาวน์โหลดรูปทั้งหมดหรือคัดลอกรูปทีละรูปเพื่อความสะดวกในการวางใน LINE PC ครับ');
+        }
+
+        function downloadAllShareImages() {
+            if (!activeShareData || !activeShareData.images || activeShareData.images.length === 0) {
+                alert('ไม่มีรูปภาพสำหรับดาวน์โหลด');
+                return;
+            }
+            activeShareData.images.forEach((imgSrc, idx) => {
+                const a = document.createElement('a');
+                a.href = imgSrc;
+                a.download = `${activeShareData.title || 'report'}_image_${idx + 1}.jpg`;
+                a.click();
+            });
+        }
+
+        // HTML Escape Helper
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // --- 12. INITIALIZATION ON DOM LOADED ---
+        document.addEventListener('DOMContentLoaded', () => {
+            loadAllData();
+            initSystemClock();
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        });
     </script>
 </body>
 </html>
