@@ -336,7 +336,7 @@ body {
     <!-- เครื่องมือเพิ่มกรอบข้อความและวาดวงกลม -->
     <section class="panel">
       <h2>เพิ่มกรอบข้อความบนรูปภาพ &amp; วาดวงกลม</h2>
-      
+
       <!-- เพิ่ม/แก้ไขกรอบข้อความอเนกประสงค์ -->
       <div id="textBoxPanel" style="background:#f8fafc; border:1px solid var(--line); border-radius:10px; padding:14px; margin-bottom:14px;">
         <div id="textBoxPanelTitle" style="font-weight:600; font-size:15px; margin-bottom:10px; color:var(--navy);">💬 เพิ่มกรอบข้อความในรูปภาพ (หรือคลิกที่กรอบบนภาพเพื่อแก้ไข):</div>
@@ -421,6 +421,7 @@ body {
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/piexifjs@1.0.6/piexif.min.js"></script>
 
 <script>
 'use strict';
@@ -449,8 +450,8 @@ const DEFAULT_ROWS = [
   ['datetime', 'none', 'none', 'none', 'none'],
   ['gps', 'none', 'none', 'none', 'none'],
   ['road', 'village', 'subdistrict', 'district', 'province'],
-  ['postalCode', 'country', 'none', 'none', 'none'],
-  ['none', 'none', 'none', 'none', 'none']
+  ['country', 'none', 'none', 'none'],
+  ['none', 'none', 'none', 'none']
 ];
 
 function buildRowConfigUI() {
@@ -514,7 +515,7 @@ function range(start, end) {
 function initSelectors() {
   fillSelect('day', range(1, 31), true);
   fillSelect('month', range(1, 12), true);
-  
+
   const years = [];
   const currentY = new Date().getFullYear() + 543;
   for (let y = currentY - 2; y <= currentY + 5; y++) {
@@ -554,7 +555,6 @@ let draggingBoxIndex = null;
 let dragOffsetX = 0;
 let dragOffsetY = 0;
 
-// เลือกสีวงกลม
 document.querySelectorAll('.color-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('selected'));
@@ -673,16 +673,37 @@ async function reverseGeocode(lat, lng) {
   }
 }
 
+// --- ส่วน Timestamp (ปรับเฉพาะส่วนนี้) ---
+function getTimestampParts() {
+  const day = String($('day').value || '01').padStart(2, '0');
+  const month = String($('month').value || '01').padStart(2, '0');
+  const yearBE2 = parseInt($('year').value || '69', 10);
+  const yearBE4 = yearBE2 >= 0 ? (2500 + yearBE2) : (new Date().getFullYear() + 543);
+  const yearAD = String(yearBE4 - 543).padStart(4, '0');
+  const yearAD2 = yearAD.slice(-2);
+  const hour = String($('hour').value || '00').padStart(2, '0');
+  const minute = String($('minute').value || '00').padStart(2, '0');
+  const second = String($('second').value || '00').padStart(2, '0');
+
+  return {
+    day,
+    month,
+    yearBE2: String(yearBE2).padStart(2, '0'),
+    yearAD,
+    yearAD2,
+    hour,
+    minute,
+    second,
+    displayText: `${month}/${day}/${yearAD2} ${hour}:${minute}:${second}`,
+    exifDateTime: `${yearAD}:${month}:${day} ${hour}:${minute}:${second}`,
+    fileName: `TimePhoto_${yearAD}${month}${day}_${hour}${minute}${second}.jpg`
+  };
+}
+
 function getSlotValue(type) {
   switch (type) {
     case 'datetime': {
-      const m = $('month').value;
-      const d = $('day').value;
-      const y = $('year').value;
-      const h = $('hour').value;
-      const min = $('minute').value;
-      const s = $('second').value;
-      return `${m}/${d}/${y} ${h}:${min}:${s}`;
+      return getTimestampParts().displayText;
     }
     case 'gps': {
       const point = parseGPS();
@@ -757,6 +778,37 @@ function drawTimestampOverlay(ctx, width, height) {
   ctx.restore();
 }
 
+function embedTimestampExif(jpegDataUrl) {
+  if (!window.piexif) return jpegDataUrl;
+
+  const ts = getTimestampParts();
+
+  const zeroth = {};
+  zeroth[piexif.ImageIFD.Make] = 'samsung';
+  zeroth[piexif.ImageIFD.Model] = 'SM-S918B';
+  zeroth[piexif.ImageIFD.DateTime] = ts.exifDateTime;
+
+  const exif = {};
+  exif[piexif.ExifIFD.DateTimeOriginal] = ts.exifDateTime;
+  exif[piexif.ExifIFD.DateTimeDigitized] = ts.exifDateTime;
+  exif[piexif.ExifIFD.ISOSpeedRatings] = 2362;
+  exif[piexif.ExifIFD.FocalLength] = [63, 10];
+  exif[piexif.ExifIFD.FNumber] = [17, 10];
+  exif[piexif.ExifIFD.ExposureTime] = [1, 14];
+
+  const gps = {};
+  const point = parseGPS();
+  if (point) {
+    gps[piexif.GPSIFD.GPSLatitudeRef] = point.lat >= 0 ? 'N' : 'S';
+    gps[piexif.GPSIFD.GPSLatitude] = piexif.GPSHelper.degToDmsRational(Math.abs(point.lat));
+    gps[piexif.GPSIFD.GPSLongitudeRef] = point.lng >= 0 ? 'E' : 'W';
+    gps[piexif.GPSIFD.GPSLongitude] = piexif.GPSHelper.degToDmsRational(Math.abs(point.lng));
+  }
+
+  const exifBytes = piexif.dump({ '0th': zeroth, 'Exif': exif, 'GPS': gps });
+  return piexif.insert(exifBytes, jpegDataUrl);
+}
+
 function drawCircles(ctx, scaleX = 1, scaleY = 1) {
   circles.forEach(c => {
     ctx.save();
@@ -808,7 +860,6 @@ function drawCustomTextBoxes(ctx, scaleX = 1, scaleY = 1) {
     const bx = box.x * scaleX;
     const by = box.y * scaleY;
 
-    // วาดพื้นหลังกรอบ
     if (box.bgMode !== 'none') {
       const alpha = box.bgMode === 'semi' ? 0.75 : 1;
       ctx.fillStyle = hexToRgba(box.bgColor, alpha);
@@ -821,7 +872,6 @@ function drawCustomTextBoxes(ctx, scaleX = 1, scaleY = 1) {
       ctx.fill();
     }
 
-    // วาดข้อความ
     ctx.font = `600 ${fSize}px Sarabun, sans-serif`;
     ctx.fillStyle = box.color;
     ctx.textBaseline = 'top';
@@ -831,7 +881,6 @@ function drawCustomTextBoxes(ctx, scaleX = 1, scaleY = 1) {
       ctx.fillText(line, bx + padX, by + padY + (lineIdx * lineHeight));
     });
 
-    // ถ้ากำลังถูกเลือกอยู่ ให้วาดเส้นกรอบเน้นสีทอง/น้ำเงิน
     if (idx === selectedBoxIndex) {
       ctx.strokeStyle = '#d7b45a';
       ctx.lineWidth = Math.max(2, Math.round(3 * scaleX));
@@ -868,7 +917,7 @@ function drawPreview() {
   canvas.height = Math.round(image.naturalHeight * scale);
 
   ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
-  
+
   drawCircles(ctx, 1, 1);
   drawCustomTextBoxes(ctx, 1, 1);
   drawTimestampOverlay(ctx, canvas.width, canvas.height);
@@ -888,11 +937,9 @@ function drawPreview() {
   }
 }
 
-// อัปเดต UI แผงควบคุมข้อความตามสถานะเลือก
 function updateTextBoxPanelUI() {
   if (selectedBoxIndex !== null && customTextBoxes[selectedBoxIndex]) {
     const box = customTextBoxes[selectedBoxIndex];
-    $('textBoxPanelTitle.textContent') // keep title or change
     $('textBoxPanelTitle').innerHTML = `✏️ กำลังแก้ไขกรอบข้อความที่เลือก (ลำดับที่ ${selectedBoxIndex + 1}):`;
     $('customTextContent').value = box.text;
     $('customTextSize').value = box.fontSize;
@@ -910,7 +957,6 @@ function updateTextBoxPanelUI() {
   }
 }
 
-// ผูกอีเวนต์เปลี่ยนค่าในฟอร์มให้มีผลแบบเรียลไทม์ทันที
 ['customTextContent', 'customTextSize', 'customTextColor', 'customTextBgColor', 'customTextBgMode'].forEach(id => {
   $(id).addEventListener('input', () => {
     if (selectedBoxIndex !== null && customTextBoxes[selectedBoxIndex]) {
@@ -925,7 +971,6 @@ function updateTextBoxPanelUI() {
   });
 });
 
-// เพิ่มหรือบันทึกกรอบข้อความ
 $('saveTextBoxBtn').addEventListener('click', () => {
   const text = $('customTextContent').value.trim();
   if (!text) {
@@ -939,7 +984,6 @@ $('saveTextBoxBtn').addEventListener('click', () => {
   const bgMode = $('customTextBgMode').value;
 
   if (selectedBoxIndex !== null && customTextBoxes[selectedBoxIndex]) {
-    // อัปเดตกรอบเดิมที่เลือกอยู่
     const box = customTextBoxes[selectedBoxIndex];
     box.text = text;
     box.fontSize = fontSize;
@@ -947,7 +991,6 @@ $('saveTextBoxBtn').addEventListener('click', () => {
     box.bgColor = bgColor;
     box.bgMode = bgMode;
   } else {
-    // สร้างกรอบใหม่
     const canvas = $('previewCanvas');
     const x = Math.round(canvas.width * 0.08);
     const y = Math.round(canvas.height * 0.08 + (customTextBoxes.length * 45));
@@ -967,7 +1010,6 @@ $('saveTextBoxBtn').addEventListener('click', () => {
   drawPreview();
 });
 
-// ปุ่มลบกรอบที่เลือก
 $('deleteSelectedBoxBtn').addEventListener('click', () => {
   if (selectedBoxIndex !== null) {
     customTextBoxes.splice(selectedBoxIndex, 1);
@@ -978,7 +1020,6 @@ $('deleteSelectedBoxBtn').addEventListener('click', () => {
   }
 });
 
-// ปุ่มยกเลิกการเลือกกรอบ
 $('cancelEditBoxBtn').addEventListener('click', () => {
   selectedBoxIndex = null;
   $('customTextContent').value = '';
@@ -1001,7 +1042,6 @@ $('clearTextBoxesBtn').addEventListener('click', () => {
   drawPreview();
 });
 
-// ตรวจสอบการคลิกบน Canvas เพื่อเลือกกรอบ หรือลากย้าย
 const canvas = $('previewCanvas');
 
 function getBoxAtCoord(canvasX, canvasY) {
@@ -1009,185 +1049,100 @@ function getBoxAtCoord(canvasX, canvasY) {
   for (let i = customTextBoxes.length - 1; i >= 0; i--) {
     const box = customTextBoxes[i];
     const { bWidth, bHeight } = measureTextBox(ctx, box, 1);
-
-    if (canvasX >= box.x && canvasX <= box.x + bWidth && canvasY >= box.y && canvasY <= box.y + bHeight) {
+    if (
+      canvasX >= box.x &&
+      canvasX <= box.x + bWidth &&
+      canvasY >= box.y &&
+      canvasY <= box.y + bHeight
+    ) {
       return i;
     }
   }
   return null;
 }
 
-canvas.addEventListener('mousedown', e => {
+function getCanvasCoords(e) {
   const rect = canvas.getBoundingClientRect();
-  const cx = (e.clientX - rect.left) * (canvas.width / rect.width);
-  const cy = (e.clientY - rect.top) * (canvas.height / rect.height);
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+  return {
+    x: (clientX - rect.left) * scaleX,
+    y: (clientY - rect.top) * scaleY
+  };
+}
 
-  if (!drawMode) {
-    const hitIdx = getBoxAtCoord(cx, cy);
-    if (hitIdx !== null) {
-      selectedBoxIndex = hitIdx;
-      draggingBoxIndex = hitIdx;
-      dragOffsetX = cx - customTextBoxes[hitIdx].x;
-      dragOffsetY = cy - customTextBoxes[hitIdx].y;
-      updateTextBoxPanelUI();
-      drawPreview();
-      return;
-    } else {
-      // คลิกพื้นที่ว่าง ยกเลิกการเลือกกรอบ
-      if (selectedBoxIndex !== null) {
-        selectedBoxIndex = null;
-        updateTextBoxPanelUI();
-        drawPreview();
-      }
-    }
-  }
-
-  if (drawMode && imageLoaded) {
-    startX = cx;
-    startY = cy;
-    currentX = startX;
-    currentY = startY;
+function onPointerDown(e) {
+  const pt = getCanvasCoords(e);
+  if (drawMode) {
     isDrawing = true;
+    startX = currentX = pt.x;
+    startY = currentY = pt.y;
+    return;
   }
-});
+  const hitIdx = getBoxAtCoord(pt.x, pt.y);
+  if (hitIdx !== null) {
+    selectedBoxIndex = hitIdx;
+    draggingBoxIndex = hitIdx;
+    dragOffsetX = pt.x - customTextBoxes[hitIdx].x;
+    dragOffsetY = pt.y - customTextBoxes[hitIdx].y;
+    updateTextBoxPanelUI();
+    drawPreview();
+  } else if (selectedBoxIndex !== null) {
+    selectedBoxIndex = null;
+    updateTextBoxPanelUI();
+    drawPreview();
+  }
+}
 
-canvas.addEventListener('mousemove', e => {
-  const rect = canvas.getBoundingClientRect();
-  const cx = (e.clientX - rect.left) * (canvas.width / rect.width);
-  const cy = (e.clientY - rect.top) * (canvas.height / rect.height);
-
-  if (draggingBoxIndex !== null) {
-    customTextBoxes[draggingBoxIndex].x = cx - dragOffsetX;
-    customTextBoxes[draggingBoxIndex].y = cy - dragOffsetY;
+function onPointerMove(e) {
+  const pt = getCanvasCoords(e);
+  if (drawMode && isDrawing) {
+    currentX = pt.x;
+    currentY = pt.y;
     drawPreview();
     return;
   }
-
-  if (!drawMode) {
-    canvas.style.cursor = getBoxAtCoord(cx, cy) !== null ? 'move' : 'default';
-  } else {
-    canvas.style.cursor = 'crosshair';
-  }
-
-  if (!isDrawing || !drawMode) return;
-  currentX = cx;
-  currentY = cy;
-  drawPreview();
-});
-
-canvas.addEventListener('mouseup', e => {
   if (draggingBoxIndex !== null) {
-    draggingBoxIndex = null;
-    return;
-  }
-
-  if (!isDrawing || !drawMode) return;
-  isDrawing = false;
-  const rect = canvas.getBoundingClientRect();
-  const endX = (e.clientX - rect.left) * (canvas.width / rect.width);
-  const endY = (e.clientY - rect.top) * (canvas.height / rect.height);
-
-  if (Math.abs(endX - startX) > 5 || Math.abs(endY - startY) > 5) {
-    circles.push({
-      x1: startX,
-      y1: startY,
-      x2: endX,
-      y2: endY,
-      color: $('circleColor').value
-    });
-  }
-  drawPreview();
-});
-
-// Touch support สำหรับมือถือ
-canvas.addEventListener('touchstart', e => {
-  const touch = e.touches[0];
-  const rect = canvas.getBoundingClientRect();
-  const cx = (touch.clientX - rect.left) * (canvas.width / rect.width);
-  const cy = (touch.clientY - rect.top) * (canvas.height / rect.height);
-
-  if (!drawMode) {
-    const hitIdx = getBoxAtCoord(cx, cy);
-    if (hitIdx !== null) {
-      selectedBoxIndex = hitIdx;
-      draggingBoxIndex = hitIdx;
-      dragOffsetX = cx - customTextBoxes[hitIdx].x;
-      dragOffsetY = cy - customTextBoxes[hitIdx].y;
-      updateTextBoxPanelUI();
-      drawPreview();
-      e.preventDefault();
-      return;
-    }
-  }
-
-  if (drawMode && imageLoaded) {
-    startX = cx;
-    startY = cy;
-    currentX = startX;
-    currentY = startY;
-    isDrawing = true;
-    e.preventDefault();
-  }
-});
-
-canvas.addEventListener('touchmove', e => {
-  const touch = e.touches[0];
-  const rect = canvas.getBoundingClientRect();
-  const cx = (touch.clientX - rect.left) * (canvas.width / rect.width);
-  const cy = (touch.clientY - rect.top) * (canvas.height / rect.height);
-
-  if (draggingBoxIndex !== null) {
-    customTextBoxes[draggingBoxIndex].x = cx - dragOffsetX;
-    customTextBoxes[draggingBoxIndex].y = cy - dragOffsetY;
+    customTextBoxes[draggingBoxIndex].x = Math.round(pt.x - dragOffsetX);
+    customTextBoxes[draggingBoxIndex].y = Math.round(pt.y - dragOffsetY);
     drawPreview();
-    e.preventDefault();
-    return;
   }
+}
 
-  if (!isDrawing || !drawMode) return;
-  currentX = cx;
-  currentY = cy;
-  drawPreview();
-  e.preventDefault();
-});
-
-canvas.addEventListener('touchend', e => {
-  if (draggingBoxIndex !== null) {
-    draggingBoxIndex = null;
-    return;
+function onPointerUp() {
+  if (drawMode && isDrawing) {
+    isDrawing = false;
+    if (Math.hypot(currentX - startX, currentY - startY) > 6) {
+      circles.push({
+        x1: startX,
+        y1: startY,
+        x2: currentX,
+        y2: currentY,
+        color: $('circleColor').value
+      });
+    }
+    drawPreview();
   }
+  draggingBoxIndex = null;
+}
 
-  if (!isDrawing || !drawMode) return;
-  isDrawing = false;
-  if (Math.abs(currentX - startX) > 5 || Math.abs(currentY - startY) > 5) {
-    circles.push({
-      x1: startX,
-      y1: startY,
-      x2: currentX,
-      y2: currentY,
-      color: $('circleColor').value
-    });
-  }
-  drawPreview();
-  e.preventDefault();
-});
+canvas.addEventListener('mousedown', onPointerDown);
+window.addEventListener('mousemove', onPointerMove);
+window.addEventListener('mouseup', onPointerUp);
+canvas.addEventListener('touchstart', onPointerDown, { passive: true });
+window.addEventListener('touchmove', onPointerMove, { passive: true });
+window.addEventListener('touchend', onPointerUp);
 
 $('toggleDrawBtn').addEventListener('click', () => {
-  if (!imageLoaded) {
-    alert('กรุณาเลือกรูปภาพก่อนเปิดโหมดวาดวงกลม');
-    return;
-  }
   drawMode = !drawMode;
-  const btn = $('toggleDrawBtn');
-  if (drawMode) {
-    btn.textContent = '❌ ปิดโหมดวาดวงกลม';
-    btn.className = 'btn active-draw';
-    $('drawStatusText').textContent = 'สถานะ: 🟢 กำลังเปิดโหมดวาดวงกลม (คลิกและลากเมาส์ครอบบุคคลในภาพ)';
-  } else {
-    btn.textContent = '🖊️ เปิดโหมดวาดวงกลม';
-    btn.className = 'btn light';
-    $('drawStatusText').textContent = 'สถานะ: ปิดโหมดวาดวงกลม (คลิกที่กรอบข้อความบนภาพเพื่อแก้ไข หรือคลิกลากเพื่อย้ายตำแหน่ง)';
-  }
+  isDrawing = false;
+  $('toggleDrawBtn').classList.toggle('active-draw', drawMode);
+  $('toggleDrawBtn').textContent = drawMode ? '✅ กำลังวาดวงกลม (คลิกเพื่อปิด)' : '🖊️ เปิดโหมดวาดวงกลม';
+  $('drawStatusText').textContent = drawMode
+    ? 'สถานะ: เปิดโหมดวาดวงกลม (ลากเมาส์หรือนิ้วบนภาพเพื่อวาดวงกลม)'
+    : 'สถานะ: ปิดโหมดวาดวงกลม (คลิกที่กรอบข้อความบนภาพเพื่อแก้ไข หรือคลิกลากเพื่อย้ายตำแหน่ง)';
 });
 
 $('undoCircleBtn').addEventListener('click', () => {
@@ -1200,119 +1155,94 @@ $('clearCirclesBtn').addEventListener('click', () => {
   drawPreview();
 });
 
-$('photoFile').addEventListener('change', e => {
-  const file = e.target.files && e.target.files[0];
-  if (!file) return;
-  const url = URL.createObjectURL(file);
-  image = new Image();
-  image.onload = () => {
-    imageLoaded = true;
-    circles = [];
-    customTextBoxes = [];
-    selectedBoxIndex = null;
-    updateTextBoxPanelUI();
-    drawPreview();
-    URL.revokeObjectURL(url);
-  };
-  image.src = url;
+$('downloadImage').addEventListener('click', () => {
+  const outCanvas = document.createElement('canvas');
+  const outCtx = outCanvas.getContext('2d');
+
+  if (imageLoaded) {
+    outCanvas.width = image.naturalWidth;
+    outCanvas.height = image.naturalHeight;
+    outCtx.drawImage(image, 0, 0, outCanvas.width, outCanvas.height);
+
+    const pCanvas = $('previewCanvas');
+    const scaleX = outCanvas.width / pCanvas.width;
+    const scaleY = outCanvas.height / pCanvas.height;
+
+    drawCircles(outCtx, scaleX, scaleY);
+    drawCustomTextBoxes(outCtx, scaleX, scaleY);
+    drawTimestampOverlay(outCtx, outCanvas.width, outCanvas.height);
+  } else {
+    const pCanvas = $('previewCanvas');
+    outCanvas.width = pCanvas.width;
+    outCanvas.height = pCanvas.height;
+    outCtx.drawImage(pCanvas, 0, 0);
+  }
+
+  const ts = getTimestampParts();
+  const rawJpeg = outCanvas.toDataURL('image/jpeg', 0.95);
+  const finalJpeg = embedTimestampExif(rawJpeg);
+
+  const link = document.createElement('a');
+  link.href = finalJpeg;
+  link.download = ts.fileName;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 });
 
-['day','month','year','hour','minute','second','road','village','subdistrict','district','postalCode','province','gpsFormat'].forEach(id => {
-  if ($(id)) {
-    $(id).addEventListener('input', drawPreview);
-    $(id).addEventListener('change', drawPreview);
-  }
-});
-
-$('gps').addEventListener('change', () => {
-  const p = parseGPS();
-  if (p && map && marker) {
-    marker.setLatLng([p.lat, p.lng]);
-    map.setView([p.lat, p.lng], 16);
-    reverseGeocode(p.lat, p.lng);
-  }
-  drawPreview();
-});
+$('refreshPreview').addEventListener('click', drawPreview);
 
 $('resetGPS').addEventListener('click', () => {
   setGPSLocation(STATION_LOCATION[0], STATION_LOCATION[1], true, true);
 });
 
-$('reloadMapBtn').addEventListener('click', () => {
-  if (map) {
-    map.invalidateSize();
-    $('mapStatus').textContent = '🔄 รีเฟรชขนาดแผนที่เรียบร้อย';
-  } else {
-    initGPSMap();
-  }
-});
-
 $('getGPSBtn').addEventListener('click', () => {
   if (!navigator.geolocation) {
-    alert('เบราว์เซอร์นี้ไม่รองรับระบบระบุตำแหน่ง GPS');
+    $('mapStatus').textContent = '⚠️ อุปกรณ์นี้ไม่รองรับการดึงพิกัด GPS';
     return;
   }
-  $('mapStatus').textContent = 'กำลังค้นหาพิกัดปัจจุบันจากอุปกรณ์ของคุณ...';
+  $('mapStatus').textContent = 'กำลังดึงพิกัดปัจจุบัน...';
   navigator.geolocation.getCurrentPosition(
-    pos => {
-      setGPSLocation(pos.coords.latitude, pos.coords.longitude, true, true);
-    },
-    err => {
-      alert('ไม่สามารถดึงพิกัดได้: กรุณาอนุญาตการเข้าถึงตำแหน่ง');
-      $('mapStatus').textContent = '⚠️ ไม่สามารถดึงพิกัดอัตโนมัติได้';
-    },
-    { enableHighAccuracy: true, timeout: 10000 }
+    pos => setGPSLocation(pos.coords.latitude, pos.coords.longitude, true, true),
+    () => { $('mapStatus').textContent = '⚠️ ไม่สามารถดึงพิกัดปัจจุบันได้'; }
   );
 });
 
-$('refreshPreview').addEventListener('click', drawPreview);
-
-$('downloadImage').addEventListener('click', () => {
-  if (!imageLoaded) {
-    alert('กรุณาเลือกรูปภาพก่อนดาวน์โหลด');
-    return;
+$('reloadMapBtn').addEventListener('click', () => {
+  if (map) {
+    map.remove();
+    map = null;
+    marker = null;
   }
-  // ขณะดาวน์โหลด ซ่อนกรอบประเลือก (selectedBoxIndex = null ชั่วคราว) เพื่อไม่ให้ติดเส้นประลงไปในภาพจริง
-  const prevSelected = selectedBoxIndex;
-  selectedBoxIndex = null;
-  drawPreview();
+  initGPSMap();
+});
 
-  const canvasExport = document.createElement('canvas');
-  canvasExport.width = image.naturalWidth;
-  canvasExport.height = image.naturalHeight;
-  const ctx = canvasExport.getContext('2d');
-  ctx.drawImage(image, 0, 0);
+$('gps').addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    const p = parseGPS();
+    if (p) setGPSLocation(p.lat, p.lng, true, true);
+  }
+});
 
-  const previewCanvas = $('previewCanvas');
-  const scaleX = image.naturalWidth / previewCanvas.width;
-  const scaleY = image.naturalHeight / previewCanvas.height;
+$('photoFile').addEventListener('change', e => {
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    image = new Image();
+    image.onload = () => {
+      imageLoaded = true;
+      drawPreview();
+    };
+    image.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+});
 
-  drawCircles(ctx, scaleX, scaleY);
-  drawCustomTextBoxes(ctx, scaleX, scaleY);
-  drawTimestampOverlay(ctx, canvasExport.width, canvasExport.height);
-
-  // คืนค่าสถานะเลือกเดิมหลังวาดภาพส่งออกเสร็จ
-  selectedBoxIndex = prevSelected;
-  drawPreview();
-
-  const y = '20' + $('year').value;
-  const m = $('month').value;
-  const d = $('day').value;
-  const h = $('hour').value;
-  const min = $('minute').value;
-  const fileName = `pic${y}${m}${d}${h}${min}.png`;
-
-  canvasExport.toBlob(blob => {
-    if (!blob) return;
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = fileName;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-  }, 'image/png');
+['day', 'month', 'year', 'hour', 'minute', 'second', 'gpsFormat', 'road', 'village', 'subdistrict', 'district', 'province', 'postalCode'].forEach(id => {
+  const el = $(id);
+  if (el) el.addEventListener('input', drawPreview);
 });
 
 buildRowConfigUI();
